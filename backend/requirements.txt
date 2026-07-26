@@ -4,6 +4,7 @@ pydantic
 pydantic-settings
 sqlalchemy
 alembic
+psycopg2-binary
 redis
 opencv-python-headless
 paddleocr
