@@ -1,0 +1,5 @@
+"""GET /jobs/{id} — ลูกค้าถามสถานะงานสแกน"""
+
+
+def register_routes(app):
+    raise NotImplementedError  # TODO: ยังไม่เขียน (ดูลำดับใน blueprint)

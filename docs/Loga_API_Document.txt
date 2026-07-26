@@ -1,0 +1,3339 @@
+Loga API Document 
+ 1.0 
+OAS 3.0
+Guidelines for Integration on the Loga blog
+
+Main Function
+
+
+GET
+/api/main/login
+Login
+
+Parameters
+Name	Description
+user *
+string
+(query)
+Username
+
+user
+pass *
+string
+(query)
+MD5 hash of password
+
+5f4dcc3b5aa765d61d8327deb882cf99
+uuid *
+string
+(query)
+Device ID
+
+4510471
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "token": "string",
+    "mid": "string",
+    "name": "string",
+    "store_id": "string"
+  }
+}
+No links
+
+GET
+/api/main/logout
+Logout
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string"
+}
+No links
+
+GET
+/api/main/get_cards
+Get list of cards
+
+
+GET
+/api/main/get_card_detail
+Get card detail
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "card_id": "string",
+    "name": "string",
+    "point_product": {
+      "add": [
+        "string"
+      ],
+      "formula_id": 0,
+      "name": "string",
+      "multiplier": "string"
+    }
+  }
+}
+No links
+
+GET
+/api/main/get_rewards
+Get list of rewards
+
+Parameters
+Name	Description
+card_id *
+number
+(query)
+Card ID
+
+1
+Responses
+Code	Description	Links
+200	
+List of rewards
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": [
+    {
+      "reward_id": "string",
+      "name": "string",
+      "point_amount": 0,
+      "display_amount": 0,
+      "expire_date": 0
+    }
+  ]
+}
+No links
+
+GET
+/api/main/get_coupons
+Get Coupon
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+1
+uuid *
+string
+(query)
+User ID
+
+1
+card_id *
+number
+(query)
+Card ID
+
+1
+Responses
+Code	Description	Links
+200	
+List of rewards
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": [
+    {
+      "coupon_id": "string",
+      "detail": "string",
+      "verify_code": 0,
+      "begin_date": 0,
+      "expire_date": 0
+    }
+  ]
+}
+No links
+
+GET
+/api/main/get_customers
+Get list of customers
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+number
+(query)
+Card ID
+
+1
+offset *
+number
+(query)
+Offset
+
+0
+limit *
+number
+(query)
+Limit
+
+10
+Responses
+Code	Description	Links
+200	
+List of customers
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": [
+    {
+      "card_type": "string",
+      "pcard_id": 0,
+      "pcard_no": 0,
+      "uid": "string",
+      "username": 0,
+      "fname": "string",
+      "lname": "string",
+      "tel": "string"
+    }
+  ]
+}
+No links
+
+GET
+/api/main/get_customer_info
+Get customer info
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+plastic_ident
+string
+(query)
+Serial, barcode or mobile number (Required for plastic card)
+
+plastic_ident
+cuid
+string
+(query)
+Customer user ID or mobile number (Required for online card)
+
+cuid
+point_expiring
+string
+(query)
+Send 'true' for expiring points, 'false' otherwise (faster).
+
+point_expiring
+point_history
+string
+(query)
+Send 'true' for point history, 'false' otherwise (faster).
+
+point_history
+Responses
+Code	Description	Links
+200	
+Customer info
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "card_type": "string",
+    "user_info": {
+      "pcard_id": 0,
+      "uid": 0,
+      "fname": "string",
+      "lname": "string",
+      "tel": "string",
+      "gender": "string"
+    },
+    "card": {
+      "created": 0,
+      "expired": 0
+    },
+    "point": {
+      "now": 0
+    },
+    "credits": {
+      "cdid": 0,
+      "credit_name": "string",
+      "credit_unit": "string",
+      "current_amount": 0
+    },
+    "available_coupon": 0,
+    "available_coupon_type": {
+      "G": {
+        "type": "string",
+        "count": 0
+      },
+      "B": {
+        "type": "string",
+        "count": 0
+      },
+      "W": {
+        "type": "string",
+        "count": 0
+      },
+      "T": {
+        "type": "string",
+        "count": 0
+      },
+      "P": {
+        "type": "string",
+        "count": 0
+      },
+      "R": {
+        "type": "string",
+        "count": 0
+      }
+    },
+    "level": 0,
+    "level_text": "string",
+    "remark": "string"
+  }
+}
+No links
+
+GET
+/api/main/set_customer_profile
+Edit customer info
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+user
+uuid *
+string
+(query)
+Device ID
+
+user
+card_id *
+number
+(query)
+Card ID
+
+1
+pcard_id
+number
+(query)
+Plastic card ID (Required for plastic card)
+
+1
+cuid
+string
+(query)
+Customer user ID (Required for plastic card)
+
+cuid
+mobile
+string
+(query)
+Mobile number (Required for plastic card)
+
+0897654321
+fname
+string
+(query)
+First name (Required for plastic card)
+
+Jon
+lname
+string
+(query)
+Last name
+
+Snow
+gender
+string
+(query)
+Gender (M/F)
+
+M
+remark
+string
+(query)
+Remark for P-Member
+
+remark
+level
+number
+(query)
+Level ID
+
+level
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string"
+}
+No links
+
+GET
+/api/main/bind_plastic_card
+Bind plastic card with online card
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+cuid *
+string
+(query)
+Customer user ID or mobile number (Required for online card)
+
+5
+barcode *
+string
+(query)
+Barcode (Required)
+
+765
+serial
+string
+(query)
+NFC serial (for validation)
+
+serial
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string"
+}
+No links
+
+GET
+/api/main/unbind_plastic_card
+Unbind plastic card from online card
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+cuid *
+string
+(query)
+Customer user ID or mobile number (Required for online card)
+
+5
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string"
+}
+No links
+
+GET
+/api/main/bind_referrer
+Bind referrer
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+cuid *
+string
+(query)
+Customer user ID or mobile number (Required for online card)
+
+5
+referrer_code *
+string
+(query)
+Referrer code
+
+referrer_code
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string"
+}
+No links
+
+GET
+/api/main/unbind_referrer
+Unbind referrer
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+cuid *
+string
+(query)
+Customer user ID or mobile number (Required for online card)
+
+5
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string"
+}
+No links
+
+GET
+/api/main/create_member_ticket
+Create member subscription ticket
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+level
+string
+(query)
+Level
+
+level
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "serial": "string"
+  }
+}
+No links
+
+POST
+/api/main/subscribe_by_unregistered_card
+Subscribe By Unregistered Card
+
+Special Note for P-Member: For P-Member (Offline Member using phone number as key), please provide the Mobile Number in all three fields: serial, barcode, and mobile.
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+serial *
+string
+(query)
+serial
+barcode *
+string
+(query)
+barcode
+
+barcode
+mobile *
+string
+(query)
+Mobile number
+
++66xxxxxxxxx
+fname
+string
+(query)
+First name
+
+fname
+lname
+string
+(query)
+Last name
+
+lname
+gender
+string
+(query)
+Gender (M/F)
+
+gender
+birthday
+string
+(query)
+Birthday dd/mm/yyyy
+
+birthday
+address
+string
+(query)
+Address
+
+address
+remark
+string
+(query)
+Remark
+
+remark
+level
+number
+(query)
+Level ID
+
+level
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "pcard_id": 0,
+    "credit": 0,
+    "status": "string"
+  }
+}
+No links
+Points
+
+
+GET
+/api/points/add_customer_point
+Add customer points
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+pcard_id
+string
+(query)
+Plastic card ID (Required for plastic card)
+
+pcard_id
+cuid
+string
+(query)
+Customer user ID or mobile number (Required for online card)
+
+5
+point
+string
+(query)
+Amount of points, must not exceed 1 million. (Required, except in case that both cost and formula_id are specified)
+
+10
+formula_id
+string
+(query)
+Spending-to-point formula ID, applicable only when Spending-to-point is enabled and the cost amount is given. You can enable Spending-to-point feature and see the formula_id in the web admin "Manage" tab, under the left-side menu "Points". Also you can use the web service get_card_detail to obtain the formula id.
+
+formula_id
+cost
+string
+(query)
+Total amount of customer's spending. If Spending-to-point is enabled and both cost and formula_id are specified, the amount of points will be calculated based on that formula and automatically given to the customer. Note that in such case, the parameter point will be ignored.
+
+cost
+remark *
+string
+(query)
+Any message, visible to customer
+
+Lunch
+private_remark
+string
+(query)
+Any message, visible only to merchant staff
+
+private_remark
+reference
+string
+(query)
+Unique reference code to prevent request duplications. Future transcactions using the same reference code will be ignored.
+
+reference
+branch_code
+string
+(query)
+Branch code such as BKK, CMI.
+
+branch_code
+replace_duplicate
+string
+(query)
+Send "yes" when you want to replace transaction data with reference.
+
+replace_duplicate
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "point": {
+      "now": 0
+    }
+  }
+}
+No links
+
+GET
+/api/points/use_customer_point
+Use customer points
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+pcard_id
+string
+(query)
+Plastic Card ID (Required for plastic card) with out prefix P
+
+pcard_id
+cuid
+string
+(query)
+Customer user ID or mobile number (Required for online card)
+
+5
+point *
+string
+(query)
+Amount of points
+
+10
+pp_id
+string
+(query)
+Reward ID (Required if no remark)
+
+7
+remark
+string
+(query)
+Any message, visible to customer (Required if no pp_id)
+
+7
+reference
+string
+(query)
+Unique reference code to prevent request duplications. Future transcactions using the same reference code will be ignored.
+
+reference
+branch_code
+string
+(query)
+Branch code such as BKK, CMI
+
+branch_code
+replace_duplicate
+string
+(query)
+Send "yes" when you want to replace transaction data with reference
+
+replace_duplicate
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string"
+}
+No links
+
+GET
+/api/points/create_ticket
+Create point ticket
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+amount *
+string
+(query)
+Amount of points
+
+50
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "point": {
+      "serial": "string"
+    }
+  }
+}
+No links
+
+GET
+/api/points/cancel_ticket
+Cancel point ticket
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+ticket_id *
+string
+(query)
+Ticket ID
+
+ticket_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": true
+}
+No links
+Credits
+
+
+POST
+/api/credits/add_customer_credits
+Add customer credits
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+pcard_id
+number
+(query)
+Plastic Card ID (Required for plastic card)
+
+pcard_id
+cuid
+string
+(query)
+Customer user ID (Required for online card)
+
+5
+cdid *
+number
+(query)
+Credit ID
+
+1
+amount *
+number
+(query)
+Amount of credits, must not exceed 1 million
+
+10
+remark *
+string
+(query)
+Any message, visible to customer
+
+Lunch
+reference
+string
+(query)
+Unique reference code to prevent request duplications. Future transcactions using the same reference code will be ignored.
+
+reference
+replace_duplicate
+string
+(query)
+Send "yes" when you want to replace transaction data with reference.
+
+replace_duplicate
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "credits": {
+      "current": 0
+    }
+  }
+}
+No links
+
+POST
+/api/credits/use_customer_credits
+Use customer credits
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+pcard_id
+number
+(query)
+Plastic Card ID (Required for plastic card)
+
+pcard_id
+cuid
+string
+(query)
+Customer user ID (Required for online card)
+
+5
+cdid *
+number
+(query)
+Credit ID
+
+1
+amount *
+number
+(query)
+Amount of credits, must not exceed 1 million
+
+10
+remark *
+string
+(query)
+Any message, visible to customer
+
+Lunch
+reference
+string
+(query)
+Unique reference code to prevent request duplications. Future transcactions using the same reference code will be ignored.
+
+reference
+replace_duplicate
+string
+(query)
+Send "yes" when you want to replace transaction data with reference.
+
+replace_duplicate
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "credits": {
+      "current": 0
+    }
+  }
+}
+No links
+
+GET
+/api/credits/create_credit_qr
+Create credit QR
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+cdid *
+number
+(query)
+Credit ID
+
+1
+amount *
+number
+(query)
+Amount of credits, must not exceed 1 million
+
+10
+remark *
+string
+(query)
+Any message, visible to customer
+
+Lunch
+type
+string
+(query)
+QR type is static (default; stateless) or remote (just mark QR as used when customer scan, merchant need to check status by call get_credit_qr_status and deduct credits manually via use_customer_credits)
+
+type
+store_id
+number
+(query)
+Store ID
+
+store_id
+reference1
+string
+(query)
+Reference code 1, remote type only
+
+reference1
+reference2
+string
+(query)
+Reference code 2, remote type only
+
+reference2
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": "string",
+  "serial": "string"
+}
+No links
+
+GET
+/api/credits/get_credit_price
+Get credit price
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+cdid *
+number
+(query)
+Credit ID
+
+1
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "cdid": "string",
+    "credit_name": "string",
+    "credit_unit": "string",
+    "prices": [
+      {
+        "cdpid": "string",
+        "name": "string",
+        "price": 0,
+        "credit_value": 0,
+        "min_level": 0,
+        "target_level": 0
+      }
+    ]
+  }
+}
+No links
+
+POST
+/api/credits/topup_credits
+Tops up a customer's credits from predefined packages.
+
+Increases a customer's credit balance. Unlike the /add_customer_credits service, this endpoint requires selecting from a list of predefined options instead of specifying a free-form amount.
+To see the available top-up packages, please use the /get_credit_price endpoint.
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+cdid *
+number
+(query)
+Credit ID
+
+1
+cdpid *
+number
+(query)
+Credit Package ID
+
+1
+cuid
+number
+(query)
+Customer user ID (Required for online card)
+
+1
+pcard_id
+number
+(query)
+Plastic Card ID (Required for plastic card)
+
+1
+remark
+string
+(query)
+A custom message that will be shown to the customer. If you don't specify a message, the package name will be used by default.
+
+Lunch
+reference
+string
+(query)
+A unique code to prevent duplicate requests. If provided, subsequent requests with the same code will be ignored; if left blank, the request will always be processed.
+
+reference
+replace_duplicate
+string
+(query)
+Set to "yes" to overwrite the existing credit transaction data when a duplicate reference is detected. ⚠️ CRITICAL WARNING: Associated Level upgrades are NOT automatically rolled back. You must manually adjust the member's level.
+
+replace_duplicate
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "credits": {
+      "current": 0,
+      "new": 0
+    }
+  }
+}
+No links
+Activities
+
+
+GET
+/api/activities/get_activities
+Get activities
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+filter
+string
+(query)
+Filter = P for point, C for coupon, D for credit
+
+filter
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "type": "string",
+    "transaction_id": 0,
+    "created": 0,
+    "detail": "string"
+  }
+}
+No links
+
+GET
+/api/activities/get_activity_detail
+Get activity detail
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+transaction_id *
+string
+(query)
+Transaction ID or reference code (point transaction only)
+
+transaction_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "fullname": "string",
+    "create_by": "string",
+    "remark": "string",
+    "left": 0,
+    "source_id": 0
+  }
+}
+No links
+
+GET
+/api/activities/check_ref_code
+Check ref code
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+refcode *
+string
+(query)
+Reference code
+
+refcode
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "uid": "string",
+    "coupon_id": "string"
+  }
+}
+No links
+Helpdesk
+
+
+GET
+/api/helpdesk/getmsg
+Get Helpdesk Messages
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+board_id *
+string
+(query)
+Board ID
+
+board_id
+user_type
+string
+(query)
+Type of requested user - C: Customer, M: Merchant (Default: C) (Required for merchants)
+
+user_type
+lastupdate
+number
+(query)
+Unix timestamp for request new message after previous request (keep lastupdate timestamp by yourself)
+
+lastupdate
+from
+number
+(query)
+Unix timestamp for request message after
+
+from
+to
+number
+(query)
+Unix timestamp for request message after
+
+to
+limit
+number
+(query)
+Limit number of message (Default: 10)
+
+10
+board_status
+string
+(query)
+Filter by board status [for merchant request] (N: new/unfixed/unclosed, C: fixed/closed)
+
+board_status
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "result": [
+    {
+      "msg_id": 0,
+      "board_id": 0,
+      "msg": "string",
+      "image": "string",
+      "uid": 0,
+      "username": "string",
+      "user_type": "string",
+      "status": "string",
+      "timestamp": 0,
+      "read_timestamp": 0
+    }
+  ]
+}
+No links
+
+POST
+/api/helpdesk/postmsg
+Post Helpdesk Message
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+board_id
+string
+(query)
+Board ID (Required for merchants)
+
+board_id
+board_uid
+string
+(query)
+Board UID (Required for merchants)
+
+board_uid
+user_type
+string
+(query)
+Type of requested user - C: Customer, M: Merchant (Default: C)
+
+user_type
+msg *
+string
+(query)
+Message
+
+msg
+staffnote
+string
+(query)
+Staff note (for merchant)
+
+staffnote
+Request body
+
+multipart/form-data
+image
+string($binary)
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "result": "string"
+}
+No links
+
+GET
+/api/helpdesk/removemsg
+Remove Helpdesk Message
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+msg_id *
+string
+(query)
+Message ID
+
+msg_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "result": "string"
+}
+No links
+
+GET
+/api/helpdesk/checknewmsg
+Get number of unread messages
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id
+string
+(query)
+Card ID
+
+1
+board_id
+string
+(query)
+Board ID (Required for merchants)
+
+board_id
+mid
+string
+(query)
+Merchant ID, for get number unread messages in all cards
+
+mid
+lastupdate
+number
+(query)
+Unix timestamp for check new message after previous request (keep lastupdate timestamp by yourself)
+
+lastupdate
+user_type
+number
+(query)
+Type of requested user - C: Customer, M: Merchant (Default: C)
+
+user_type
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "result": "string"
+}
+No links
+
+GET
+/api/helpdesk/checkreadmsg
+Check messages are read, when users open the chat room; Return the messages that are read by another
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+1
+user_type
+string
+(query)
+Type of requested user - C: Customer, M: Merchant (Default: C) (Required for merchants)
+
+user_type
+lastupdate
+string
+(query)
+Unix timestamp for check message's status after previous request (keep lastupdate timestamp by yourself)
+
+lastupdate
+board_id
+string
+(query)
+Board ID
+
+board_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "result": [
+    {
+      "msg_id": 0,
+      "board_id": 0,
+      "real_timestamp": 0
+    }
+  ]
+}
+No links
+Helpdesk (Merchant)
+
+
+GET
+/api/helpdesk/getallboard
+Get All boards
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+1
+card_id *
+string
+(query)
+Card ID
+
+1
+lastupdate
+number
+(query)
+Unix timestamp for request new board after previous request (keep lastupdate timestamp by yourself)
+
+lastupdate
+limit
+number
+(query)
+Limit number of board (Default: 10)
+
+10
+board_status
+string
+(query)
+Filter by board status [for merchant request] (N: new/unfixed/unclosed, C: fixed/closed)
+
+board_status
+search
+string
+(query)
+Keyword to search helpdesk's board with / phone no. / uid / username
+
+search
+orderby
+string
+(query)
+Sort by unread board with orderby=unread
+
+orderby
+page_handle
+string
+(query)
+A page handle, returned "next_page" from a previous request
+
+page_handle
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "result": [
+    {
+      "board_id": 0,
+      "card_id": 0,
+      "status": "string",
+      "merchant_uid": 0,
+      "created": 0,
+      "updated": 0,
+      "priority": "string",
+      "recent_msg": "string",
+      "recent_image": "string",
+      "recent_msg_uid": 0,
+      "recent_msg_status": "string",
+      "recent_msg_username": "string",
+      "recent_msg_timestamp": 0,
+      "customer_uid": 0,
+      "customer_username": "string",
+      "read_msg_status": "string",
+      "num_unread": 0
+    }
+  ]
+}
+No links
+
+GET
+/api/helpdesk/updatestatusmsg
+Mark chat room as fixed/closed
+
+Parameters
+Name	Description
+token *
+string
+(query)
+Token for authenticate other services (along with uuid), valid until logout or password changed
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+status *
+string
+(query)
+Message Status (N: Open, C: Closed)
+
+status
+board_id *
+number
+(query)
+Board ID
+
+board_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "result": "string"
+}
+No links
+
+GET
+/api/helpdesk/getmsgboardid
+Get message board ID
+
+Parameters
+Name	Description
+token *
+string
+(query)
+Token for authenticate other services (along with uuid), valid until logout or password changed
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+board_uid *
+string
+(query)
+Board UID
+
+board_uid
+card_id
+number
+(query)
+Card ID
+
+card_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "result": 0,
+  "request_timestamp": 0
+}
+No links
+Coupon
+
+
+GET
+/api/coupon/get_customer_coupons
+Get customer coupons
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id
+string
+(query)
+Card ID
+
+card_id
+cuid
+string
+(query)
+Customer user ID
+
+cuid
+offset *
+number
+(query)
+Offset
+
+0
+limit *
+number
+(query)
+Limit
+
+10
+filter
+string
+(query)
+The filter can send 'V' for Valid, 'I' for Invalid, and leave blank for all.
+
+filter
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "used": true,
+  "msg": "string",
+  "user": "string"
+}
+No links
+
+GET
+/api/coupon/send_gift_coupon
+Send gift coupon
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+cuid
+string
+(query)
+Customer user ID
+
+cuid
+mobile
+string
+(query)
+Mobile number
+
+mobile
+tag_id
+number
+(query)
+Tag ID
+
+10
+coupon_id
+string
+(query)
+Coupon ID
+
+coupon_id
+amount
+string
+(query)
+Amount
+
+amount
+member_type
+string
+(query)
+All | O (Online) | P (Plastic)
+
+All | O | P
+noti_line
+number
+(query)
+0 not set, 1 send ,-1 don't send
+
+0
+noti_sms_pmember
+string
+(query)
+SMS Pmember
+
+noti_sms_pmember
+noti_sms_online
+string
+(query)
+SMS online
+
+noti_sms_online
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "type": "string",
+    "result": 0
+  }
+}
+No links
+
+GET
+/api/coupon/force_use_coupon
+Force use coupon
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+cuid *
+string
+(query)
+Customer user ID
+
+cuid
+coupon_id *
+string
+(query)
+Coupon ID
+
+coupon_id
+remark
+string
+(query)
+Private remark for using coupon
+
+remark
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": "string"
+}
+No links
+
+GET
+/api/coupon/remove_sent_coupon
+Remove send coupon
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+cuid *
+string
+(query)
+Customer user ID
+
+cuid
+coupon_id *
+string
+(query)
+Coupon ID
+
+coupon_id
+coupon_code *
+string
+(query)
+Coupon code
+
+coupon_code
+amount
+number
+(query)
+Amount
+
+1
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "success": true,
+    "message": "string"
+  }
+}
+No links
+
+GET
+/api/coupon/return_used_coupon
+Return used coupon
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+cuid *
+string
+(query)
+Customer user ID
+
+cuid
+feed_id *
+string
+(query)
+Feed ID
+
+feed_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "success": true,
+    "message": "string"
+  }
+}
+No links
+
+GET
+/api/coupon/sent_coupon_list
+Sent coupon list
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+transaction_date *
+string
+(query)
+Transection date
+
+transaction_date
+limit *
+number
+(query)
+Limit number of message (Default: 100)
+
+100
+page *
+number
+(query)
+Page
+
+1
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "param": {
+      "from": "string",
+      "to": "string",
+      "offset": "string",
+      "limit": 0
+    },
+    "sent_coupons": [
+      {
+        "sent_datestr": "string",
+        "used_datestr": "string",
+        "status": "string"
+      }
+    ]
+  }
+}
+No links
+
+GET
+/api/coupon/used_coupon_list
+Used coupon list
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+transaction_date *
+string
+(query)
+Transection date
+
+transaction_date
+limit *
+number
+(query)
+Limit number of message (Default: 100)
+
+100
+page *
+number
+(query)
+Page
+
+1
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "param": {
+      "from": "string",
+      "to": "string",
+      "offset": "string",
+      "limit": 0
+    },
+    "sent_coupons": [
+      {
+        "sent_datestr": "string",
+        "used_datestr": "string",
+        "status": "string"
+      }
+    ]
+  }
+}
+No links
+
+GET
+/api/coupon/verify_coupon
+Verify coupon
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+cuid *
+string
+(query)
+Customer ID
+
+cuid
+coupon_id *
+number
+(query)
+Coupon ID
+
+100
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": {
+    "param": {
+      "msg": "string",
+      "coupon_detail": "string"
+    }
+  }
+}
+No links
+Member
+
+
+GET
+/api/member/download
+Download
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+output
+string
+(query)
+Output type
+
+output
+date
+string
+(query)
+Date
+
+date
+fresh
+string
+(query)
+Fresh
+
+fresh
+Responses
+Code	Description	Links
+200	
+No links
+
+GET
+/api/member/shortlylist
+Shortly list
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "request_timestamp": 0,
+  "data": [
+    {
+      "uid": 0,
+      "name": "string",
+      "email": "string",
+      "tel": "string",
+      "level_id": "string",
+      "expired": "string",
+      "balance_points": 0,
+      "visit": 0,
+      "accum_spending": 0,
+      "avg_spend": 0
+    }
+  ]
+}
+No links
+
+GET
+/api/member/add_tag
+Add tag
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+tag_id
+string
+(query)
+Tag ID
+
+tag_id
+tag_name
+string
+(query)
+Tag Name
+
+tag_name
+uid *
+string
+(query)
+User ID
+
+uid
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "request_timestamp": 0,
+  "success": true
+}
+No links
+
+GET
+/api/member/remove_tag
+Remove tag
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+tag_id
+string
+(query)
+Tag ID
+
+tag_id
+tag_name
+string
+(query)
+Tag Name
+
+tag_name
+uid *
+string
+(query)
+User ID
+
+uid
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "request_timestamp": 0,
+  "success": true
+}
+No links
+
+GET
+/api/member/clear_tag
+Clear tag
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+tag_id
+string
+(query)
+Tag ID
+
+tag_id
+tag_name
+string
+(query)
+Tag Name
+
+tag_name
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "result_code": 0,
+  "msg": "string",
+  "request_timestamp": 0,
+  "success": true
+}
+No links
+Shop
+
+
+GET
+/api/shop/getorders
+Get orders
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+cuid
+string
+(query)
+Customer user ID
+
+cuid
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": [
+    {
+      "id": 0,
+      "price": 0,
+      "update_date": 0,
+      "status": "string",
+      "status_name": "string",
+      "image": "string"
+    }
+  ]
+}
+No links
+
+GET
+/api/shop/getorder
+Get order detail
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+order_id *
+string
+(query)
+Order ID from get orders API
+
+order_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": [
+    {
+      "id": 0,
+      "card_id": 0,
+      "uid": 0,
+      "customer": {
+        "uid": "string",
+        "name": "string",
+        "mail": "string",
+        "fname": "string",
+        "lname": "string",
+        "profile_address": "string",
+        "address": "string",
+        "subdistrict": "string",
+        "district": "string",
+        "province": "string",
+        "postal_code": "string",
+        "addr_postal": "string",
+        "country_code": "string",
+        "addr_ct": "string",
+        "addr_subdist": "string",
+        "birthday": {
+          "month": "string",
+          "day": "string",
+          "year": "string"
+        },
+        "gender": "string",
+        "social": "string",
+        "tel": "string"
+      },
+      "total_price": 0,
+      "points": 0,
+      "payment_name": "string",
+      "payment_type": "string",
+      "shipping_name": "string",
+      "branch_id": 0,
+      "branch_name": "string",
+      "branch_lat": "string",
+      "branch_lon": "string",
+      "shipping_fee": 0,
+      "shipping_address": "string",
+      "shipping_direction_url": "string",
+      "carrier_id": 0,
+      "carrier_name": "string",
+      "tracking_number": "string",
+      "tracking_url": "string",
+      "noted": "string",
+      "discount_point": 0,
+      "discount_price": 0,
+      "discount_code": "string",
+      "discount_code_price": 0,
+      "status": "string",
+      "updated": 0,
+      "status_name": "string",
+      "status_remark": "string",
+      "shipyours_external_id": "string",
+      "editable": true,
+      "detail": [
+        {
+          "credit_product_id": 0,
+          "option_id": 0,
+          "amount": 0,
+          "image": "string",
+          "description": "string",
+          "status": "string",
+          "product_price": 0,
+          "product_name": "string",
+          "price_before_discount": 0,
+          "option_name": "string",
+          "stock": 0,
+          "sku_shipyours": "string",
+          "note": "string"
+        }
+      ],
+      "currency": "string",
+      "history": [
+        {
+          "name": "string",
+          "status": "string",
+          "uid": "string",
+          "update_by": "string",
+          "update_date": "string"
+        }
+      ],
+      "refundable": true,
+      "product_price": 0
+    }
+  ]
+}
+No links
+
+GET
+/api/shop/getopenstatus
+Get open status
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": [
+    {
+      "isOpen": "string"
+    }
+  ]
+}
+No links
+
+GET
+/api/shop/updateopenstatus
+Update open status
+
+Parameters
+Name	Description
+token *
+string
+(query)
+User token
+
+token
+uuid *
+string
+(query)
+Device ID
+
+uuid
+card_id *
+string
+(query)
+Card ID
+
+card_id
+status *
+string
+(query)
+Status
+
+Y
+Responses
+Code	Description	Links
+200	
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "code": 0,
+  "msg": "string",
+  "data": [
+    {
+      "isOpen": "string"
+    }
+  ]
+}
+No links

@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+sqlalchemy
+alembic
+redis
+opencv-python-headless
+paddleocr
+httpx
+python-multipart
+openpyxl
