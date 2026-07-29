@@ -3,4 +3,5 @@
 -r requirements.txt
 
 pytest
+fakeredis   # Redis in-memory สำหรับเทส OTP/rate_limit (behavior ตรง Redis จริง)
 # mock HTTP ใช้ httpx.MockTransport ที่ติดมากับ httpx อยู่แล้ว — ไม่ต้องลงเพิ่ม
