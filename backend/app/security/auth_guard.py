@@ -13,7 +13,7 @@ from __future__ import annotations
 import httpx
 
 from app.observability.logging import get_logger
-from app.reliability.errors import CrmAuthError, ExternalServiceError, InputValidationError
+from app.reliability.errors import AuthenticationError, ExternalServiceError
 
 log = get_logger(__name__)
 
@@ -43,14 +43,14 @@ class LineTokenVerifier:
         LINE ติดต่อไม่ได้/ตอบแปลก     → ExternalServiceError (retry ได้)
         """
         if not id_token or not id_token.strip():
-            raise InputValidationError("ไม่พบ LINE token")
+            raise AuthenticationError("ไม่พบ LINE token")
 
         body = self._call_line_verify(id_token)
 
         # ป้องกันตัวเอง: ยืนยันว่า token ออกให้ "แอปเรา" ไม่ใช่แอปอื่น
         # (LINE เช็คให้แล้วเพราะเราส่ง client_id แต่เช็คซ้ำที่นี่กันพลาด)
         if body.get("aud") != self._channel_id:
-            raise CrmAuthError("LINE token ไม่ได้ออกให้แอปนี้")
+            raise AuthenticationError("LINE token ไม่ได้ออกให้แอปนี้")
 
         user_id = body.get("sub")
         if not user_id:
@@ -73,7 +73,7 @@ class LineTokenVerifier:
 
         # LINE ตอบ 400 เมื่อ token ผิด/หมดอายุ — เป็นความผิดของ token ไม่ใช่ระบบล่ม
         if response.status_code == httpx.codes.BAD_REQUEST:
-            raise CrmAuthError("LINE token ไม่ถูกต้องหรือหมดอายุ")
+            raise AuthenticationError("LINE token ไม่ถูกต้องหรือหมดอายุ")
 
         if response.status_code != httpx.codes.OK:
             raise ExternalServiceError(

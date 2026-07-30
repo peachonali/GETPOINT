@@ -7,7 +7,7 @@ import httpx
 import pytest
 
 from app.security.auth_guard import LINE_VERIFY_URL, LineTokenVerifier
-from app.reliability.errors import CrmAuthError, ExternalServiceError, InputValidationError
+from app.reliability.errors import AuthenticationError, ExternalServiceError
 
 CHANNEL_ID = "1234567890"
 LINE_USER_ID = "U0123456789abcdef"
@@ -55,20 +55,20 @@ def test_empty_token_is_rejected_without_calling_line():
         called = True
         return _line_ok()
 
-    with pytest.raises(InputValidationError):
+    with pytest.raises(AuthenticationError):
         _verifier(handler).verify("")
     assert called is False, "token ว่างต้องไม่เปลือง network call ไป LINE"
 
 
 def test_line_400_means_bad_token():
     handler = lambda r: httpx.Response(400, json={"error": "invalid_request"})
-    with pytest.raises(CrmAuthError):
+    with pytest.raises(AuthenticationError):
         _verifier(handler).verify("expired-token")
 
 
 def test_token_for_another_app_is_rejected():
     """token ที่ aud เป็นแอปอื่น — ต้องไม่ยอมรับ (กันเอา token แอปอื่นมาสวมรอย)"""
-    with pytest.raises(CrmAuthError):
+    with pytest.raises(AuthenticationError):
         _verifier(lambda r: _line_ok(aud="9999999999")).verify("other-app-token")
 
 

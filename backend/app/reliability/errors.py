@@ -36,6 +36,16 @@ class InputValidationError(GetpointError):
     retryable = False
 
 
+class AuthenticationError(GetpointError):
+    """ผู้เรียกไม่ได้ยืนยันตัวตน / token ไม่ถูกต้อง (LINE token หาย / ผิด / หมดอายุ)
+
+    แยกจาก CrmAuthError (ซึ่งเป็นเรื่อง credential ของ "เรา" ต่อ loga = ปัญหาฝั่ง server)
+    ตัวนี้คือ "ผู้เรียกยังไม่ได้ล็อกอิน" = ปัญหาฝั่ง client → routes แปลงเป็น HTTP 401
+    """
+
+    retryable = False
+
+
 class RateLimitedError(GetpointError):
     """ผู้ใช้ทำถี่เกินเพดานที่กำหนด (ขอ OTP รัว, กด /scan รัว)
 
