@@ -18,8 +18,12 @@ class Settings(BaseSettings):
     #                             ดูได้จากเว็บ Loga Merchant แถบ Manage/จัดการ ส่วน Card Info
     loga_device_id: str = ""    # loga เรียก uuid — ★ ตั้งแล้วห้ามเปลี่ยน ต้องใช้คู่กับ token ตลอดไป
     loga_timeout_seconds: float = 10.0  # ทุก external call ต้องมี timeout เสมอ
-    # line / sms / gemini keys ...
-    line_channel_token: str = ""
+    # line
+    line_login_channel_id: str = ""   # LINE Login channel — verify LIFF ID token (ดู docs/line_setup.md)
+    line_channel_token: str = ""       # Messaging API — push แจ้งแต้ม (Step 3)
+    # หนึ่ง channel = หนึ่งแบรนด์ในเฟสนี้ · วันมีลูกค้ารายที่ 2 ค่อย map channel -> tenant
+    default_tenant_id: str = "v-club"
+    # sms / gemini
     sms_api_key: str = ""
     gemini_api_key: str = ""
 
