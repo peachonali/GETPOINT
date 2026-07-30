@@ -36,6 +36,20 @@ class InputValidationError(GetpointError):
     retryable = False
 
 
+class RateLimitedError(GetpointError):
+    """ผู้ใช้ทำถี่เกินเพดานที่กำหนด (ขอ OTP รัว, กด /scan รัว)
+
+    retryable=True แต่ "ต้องรอ" — ต่างจาก error อื่นที่ retry ได้ทันที
+    routes จะจับตัวนี้แปลงเป็น HTTP 429 พร้อมบอก retry_after_seconds ให้ลูกค้า
+    """
+
+    retryable = True
+
+    def __init__(self, retry_after_seconds: int) -> None:
+        super().__init__(f"ทำรายการถี่เกินไป กรุณารออีก {retry_after_seconds} วินาที")
+        self.retry_after_seconds = retry_after_seconds
+
+
 class ExternalServiceError(GetpointError):
     """ระบบภายนอกตอบผิดพลาด (CRM / LINE / SMS / Gemini)
 
