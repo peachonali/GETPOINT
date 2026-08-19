@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     line_channel_token: str = ""       # Messaging API — push แจ้งแต้ม (Step 3)
     # หนึ่ง channel = หนึ่งแบรนด์ในเฟสนี้ · วันมีลูกค้ารายที่ 2 ค่อย map channel -> tenant
     default_tenant_id: str = "v-club"
+    # ที่เก็บไฟล์ (รูปใบเสร็จ) — วันหน้าเปลี่ยนเป็น S3 ค่อยเพิ่ม config ของ S3
+    storage_dir: str = "storage_data"
     # sms / gemini
     sms_api_key: str = ""
     gemini_api_key: str = ""

@@ -7,6 +7,7 @@ alembic
 psycopg2-binary
 redis
 opencv-python-headless
+pillow
 paddleocr
 httpx
 python-multipart
