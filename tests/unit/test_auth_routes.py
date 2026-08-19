@@ -15,7 +15,7 @@ from app.member.member_link import MemberLinker
 from app.member.member_service import MemberService
 from app.member.otp_store import OtpStore
 from app.reliability.errors import AuthenticationError
-from app.routes.auth_routes import (
+from app.routes.dependencies import (
     get_line_verifier,
     get_member_service,
     get_tenant_id,

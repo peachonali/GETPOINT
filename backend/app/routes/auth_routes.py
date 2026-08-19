@@ -6,11 +6,16 @@ error ที่ member_service/verifier โยน จะถูกแปลงเ
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database.db import get_session
+from app.routes.dependencies import (
+    get_line_verifier,
+    get_member_service,
+    get_tenant_id,
+)
 from app.member.member_service import MemberService
 from app.member.otp_verify import OtpOutcome
 from app.observability.logging import get_logger
@@ -30,19 +35,6 @@ class RequestOtpBody(BaseModel):
 class VerifyBody(BaseModel):
     phone: str
     otp: str
-
-
-# ── dependency providers: ดึงของจริงที่ประกอบไว้ใน main.py ผ่าน app.state ──
-def get_member_service(request: Request) -> MemberService:
-    return request.app.state.member_service
-
-
-def get_line_verifier(request: Request) -> LineTokenVerifier:
-    return request.app.state.line_verifier
-
-
-def get_tenant_id(request: Request) -> str:
-    return request.app.state.default_tenant_id
 
 
 def require_line_user(

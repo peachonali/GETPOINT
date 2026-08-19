@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     loga_card_id: str = ""      # เลขที่บัตรสมาชิก — required เกือบทุก endpoint
     #                             ดูได้จากเว็บ Loga Merchant แถบ Manage/จัดการ ส่วน Card Info
     loga_device_id: str = ""    # loga เรียก uuid — ★ ตั้งแล้วห้ามเปลี่ยน ต้องใช้คู่กับ token ตลอดไป
+    loga_formula_id: str = ""   # สูตรคิดแต้ม (ดูจาก get_card_detail) — Step 5 จะย้ายไปตั้งต่อร้าน
     loga_timeout_seconds: float = 10.0  # ทุก external call ต้องมี timeout เสมอ
     # line
     line_login_channel_id: str = ""   # LINE Login channel — verify LIFF ID token (ดู docs/line_setup.md)
