@@ -19,10 +19,29 @@ export function OtpInput({ value, onChange, disabled }: Props) {
   }
 
   function handleChange(index: number, e: ChangeEvent<HTMLInputElement>) {
-    const digit = e.target.value.replace(/\D/g, "").slice(-1); // เอาเฉพาะตัวเลขตัวสุดท้าย
-    if (!digit) return;
-    setDigit(index, digit);
+    const digits = e.target.value.replace(/\D/g, "");
+    if (!digits) return;
+
+    // ★ รับได้ทั้งพิมพ์ทีละตัว และ "มาทีเดียวหลายตัว"
+    //   เคสหลังเกิดจริงบน Android: SMS autofill ยัดรหัสทั้ง 6 หลักลงช่องเดียว
+    //   ถ้าเก็บแค่ตัวเดียวจะทิ้งอีก 5 ตัวทิ้ง แล้วลูกค้าต้องพิมพ์เองใหม่
+    if (digits.length > 1) {
+      fill(digits, index);
+      return;
+    }
+
+    setDigit(index, digits);
     boxes.current[index + 1]?.focus(); // เลื่อนไปช่องถัดไป
+  }
+
+  function fill(digits: string, from: number) {
+    const chars = value.split("");
+    for (let i = 0; i < digits.length && from + i < OTP_LENGTH; i += 1) {
+      chars[from + i] = digits[i];
+    }
+    const next = chars.join("").slice(0, OTP_LENGTH);
+    onChange(next);
+    boxes.current[Math.min(from + digits.length, OTP_LENGTH - 1)]?.focus();
   }
 
   function handleKeyDown(index: number, e: KeyboardEvent<HTMLInputElement>) {
@@ -33,11 +52,8 @@ export function OtpInput({ value, onChange, disabled }: Props) {
 
   function handlePaste(e: ClipboardEvent<HTMLInputElement>) {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
-    if (pasted) {
-      onChange(pasted);
-      boxes.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
-    }
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "");
+    if (pasted) fill(pasted, 0);  // วางทั้งรหัส → เริ่มเติมจากช่องแรกเสมอ
   }
 
   return (

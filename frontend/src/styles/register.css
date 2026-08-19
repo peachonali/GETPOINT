@@ -125,3 +125,31 @@ body { margin: 0; }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }
 
 .grow { flex: 1; }
+.center-block { display: block; margin: 6px auto 0; }
+
+/* ── หน้าสแกน: ที่วางรูป ── */
+.dropzone {
+  width: 100%; margin-top: 22px; padding: 40px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  font-family: inherit; font-size: 14px; color: var(--v-muted); text-align: center;
+  background: var(--v-surface); cursor: pointer;
+  border: 2px dashed var(--v-primary-border); border-radius: var(--v-radius-lg);
+  transition: border-color 0.15s, background 0.15s;
+}
+.dropzone:hover { border-color: var(--v-primary); background: var(--v-primary-soft); }
+.dropzone:focus-visible { outline: 3px solid var(--v-primary-soft); outline-offset: 2px; }
+.dropzone__icon { font-size: 44px; }
+
+.preview {
+  width: 100%; margin-top: 22px; border-radius: var(--v-radius-lg);
+  /* ใบเสร็จเป็นแนวตั้งยาว — จำกัดความสูงไม่ให้ดันปุ่มตกจอ */
+  max-height: 46vh; object-fit: contain;
+  background: var(--v-surface); box-shadow: var(--v-shadow);
+}
+
+/* ── หน้าผลลัพธ์: ตัวเลขแต้ม ── */
+.balance {
+  margin: 18px 0 4px; font-size: 46px; font-weight: 800; line-height: 1;
+  color: var(--v-primary-strong); font-variant-numeric: tabular-nums;
+}
+.balance__unit { font-size: 18px; font-weight: 700; color: var(--v-muted); }

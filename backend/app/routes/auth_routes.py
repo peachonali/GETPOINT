@@ -8,9 +8,11 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Header
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database.db import get_session
+from app.database.members import Member
 from app.routes.dependencies import (
     get_line_verifier,
     get_member_service,
@@ -56,6 +58,25 @@ def _extract_bearer(authorization: str) -> str:
 
 
 # ── endpoints ──
+@router.get("/me")
+def read_me(
+    line_user_id: str = Depends(require_line_user),
+    tenant_id: str = Depends(get_tenant_id),
+    session: Session = Depends(get_session),
+) -> dict:
+    """สถานะของคนที่กำลังเปิดแอปอยู่ — หน้าเว็บใช้ตัดสินว่าจะโชว์หน้าสมัครหรือหน้าสแกน
+
+    ★ ถ้าไม่มี endpoint นี้ คนที่ยืนยันเบอร์ไปแล้วจะเจอหน้าสมัครซ้ำทุกครั้งที่เปิดแอป
+    ไม่คืนเบอร์เต็มออกไป (PDPA) — หน้าเว็บไม่จำเป็นต้องรู้ ก็แค่ต้องรู้ว่า "ผ่านหรือยัง"
+    """
+    member = session.execute(
+        select(Member).where(Member.tenant_id == tenant_id, Member.line_user_id == line_user_id)
+    ).scalar_one_or_none()
+
+    verified = bool(member and member.phone_verified and member.crm_customer_id)
+    return {"verified": verified}
+
+
 @router.post("/request-otp")
 def request_otp(
     body: RequestOtpBody,

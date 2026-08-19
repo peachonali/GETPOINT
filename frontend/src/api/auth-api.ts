@@ -1,44 +1,27 @@
 // ยิง backend เรื่องสมัคร/OTP — ต่อกับ /auth/* ที่เขียนไว้ฝั่ง FastAPI
-import { config, isPreviewMode } from "../config";
-
-// error ที่มี status + retryAfter ให้หน้าจอเอาไปแสดงข้อความ/นับถอยหลังได้
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public retryAfterSeconds?: number,
-  ) {
-    super(message);
-    this.name = "ApiError";
-  }
-}
+import { isPreviewMode } from "../config";
+import { ApiError, api, sleep } from "./client";
 
 export interface VerifyResult {
   status: "verified";
   crm_customer_id: string | null;
 }
 
-async function postJson(path: string, idToken: string, body: unknown): Promise<any> {
-  const res = await fetch(`${config.apiBase}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${idToken}`, // backend verify token นี้กับ LINE
-    },
-    body: JSON.stringify(body),
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    // backend ส่ง {error, retry_after_seconds} มาตาม exception handler ใน main.py
-    throw new ApiError(res.status, data?.error ?? "เกิดข้อผิดพลาด กรุณาลองใหม่", data?.retry_after_seconds);
-  }
-  return data;
+export interface MeResult {
+  verified: boolean;
 }
 
 // ── โหมดพรีวิว: จำลองคำตอบ backend เพื่อลอง flow ในเบราว์เซอร์ปกติ (OTP ที่ถูกคือ 123456) ──
 const PREVIEW_OTP = "123456";
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+let previewVerified = false;
+
+export async function readMe(idToken: string): Promise<MeResult> {
+  if (isPreviewMode) {
+    await sleep(300);
+    return { verified: previewVerified };
+  }
+  return api.get("/auth/me", idToken) as Promise<MeResult>;
+}
 
 export async function requestOtp(phone: string, idToken: string): Promise<void> {
   if (isPreviewMode) {
@@ -46,14 +29,17 @@ export async function requestOtp(phone: string, idToken: string): Promise<void> 
     console.info(`[preview] OTP จำลองคือ ${PREVIEW_OTP}`);
     return;
   }
-  await postJson("/auth/request-otp", idToken, { phone });
+  await api.post("/auth/request-otp", idToken, { phone });
 }
 
 export async function verifyOtp(phone: string, otp: string, idToken: string): Promise<VerifyResult> {
   if (isPreviewMode) {
     await sleep(600);
     if (otp !== PREVIEW_OTP) throw new ApiError(400, "รหัส OTP ไม่ถูกต้อง (พรีวิว: ใช้ 123456)");
+    previewVerified = true;
     return { status: "verified", crm_customer_id: "P-preview" };
   }
-  return postJson("/auth/verify", idToken, { phone, otp });
+  return api.post("/auth/verify", idToken, { phone, otp }) as Promise<VerifyResult>;
 }
+
+export { ApiError };

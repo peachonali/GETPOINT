@@ -17,7 +17,12 @@ function errorMessage(err: unknown): string {
 // เช็คเบาๆ ฝั่งหน้าเว็บพอให้ปุ่มกดได้/ไม่ได้ — ตัวตัดสินจริงคือ backend (normalize + validate)
 const looksLikePhone = (v: string) => /^\d{9,10}$/.test(v.replace(/\D/g, ""));
 
-export function RegisterScreen({ idToken }: { idToken: string }) {
+interface Props {
+  idToken: string;
+  onVerified?: () => void;  // ยืนยันสำเร็จ → App พาไปหน้าสแกน
+}
+
+export function RegisterScreen({ idToken, onVerified }: Props) {
   const [phase, setPhase] = useState<Phase>("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -116,6 +121,9 @@ export function RegisterScreen({ idToken }: { idToken: string }) {
             <p className="subtle">พร้อมสะสมแต้มจากทุกใบเสร็จแล้ว</p>
             {result?.crm_customer_id && (
               <p className="fine">รหัสสมาชิก {result.crm_customer_id}</p>
+            )}
+            {onVerified && (
+              <button className="btn" onClick={onVerified}>เริ่มสแกนใบเสร็จ</button>
             )}
           </div>
         )}
