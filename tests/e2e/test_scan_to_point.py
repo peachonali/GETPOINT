@@ -4,7 +4,9 @@
 ใช้ของปลอมเฉพาะ "ปลายทางที่อยู่นอกระบบเรา" (OCR/CRM/LINE/Redis)
 ส่วนตรรกะทั้งหมดตรงกลางเป็นของจริง — เทสนี้จึงพังจริงถ้า pipeline พัง
 """
+import cv2
 import fakeredis
+import numpy as np
 import pytest
 
 from app.database.members import Member
@@ -23,7 +25,19 @@ TENANT = "v-club"
 LINE_USER = "U-line-1"
 PHONE = "0812345678"
 RECEIPT_ID = "rcp-001"
-IMAGE = b"\xff\xd8\xff-fake-receipt-photo"
+
+
+def _receipt_photo() -> bytes:
+    """รูปใบเสร็จจริงๆ (สังเคราะห์) — ต้องเป็นรูปที่ decode ได้จริง
+    เพราะ pipeline มี image_prep (OpenCV) ที่จะตีกลับไฟล์ที่ไม่ใช่รูป"""
+    image = np.full((760, 460, 3), 245, np.uint8)
+    for index, text in enumerate(["TEST SHOP", "TOTAL 250.00"]):
+        cv2.putText(image, text, (28, 120 + index * 260), cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0, (15, 15, 15), 2)
+    return cv2.imencode(".jpg", image)[1].tobytes()
+
+
+IMAGE = _receipt_photo()
 
 
 @pytest.fixture

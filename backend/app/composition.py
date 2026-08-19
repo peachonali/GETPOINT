@@ -37,6 +37,7 @@ from app.member.otp_store import OtpStore
 from app.observability.logging import get_logger
 from app.ocr.fake_ocr import FakeOcr
 from app.ocr.ocr_interface import OcrEngine
+from app.ocr.paddle_ocr import PaddleOcr
 from app.points.crm_formula_strategy import CrmFormulaStrategy
 from app.points.point_service import PointService
 from app.security.auth_guard import LineTokenVerifier
@@ -167,6 +168,12 @@ def _build_notifier(shared: Shared) -> NotifierPort:
 
 
 def _build_ocr(shared: Shared) -> OcrEngine:
-    """ตอนนี้มีแต่ FakeOcr — Step 4 จะเพิ่ม PaddleOcr แล้วเลือกตาม config ตรงนี้"""
-    log.warning("ยังใช้ FakeOcr (Step 4 จะเปลี่ยนเป็น OCR จริง)")
-    return FakeOcr()
+    """เลือก OCR ตาม config — prod ใช้ paddle, เทส/dev เร็วๆ ใช้ fake
+
+    PaddleOcr โหลดโมเดลแบบ lazy (ครั้งแรกที่อ่านจริง) จึงสร้างตรงนี้ได้โดยไม่หน่วงตอนบูต
+    """
+    if shared.settings.ocr_engine == "fake":
+        log.warning("ใช้ FakeOcr ตาม config (OCR_ENGINE=fake) — จะไม่อ่านรูปจริง")
+        return FakeOcr()
+
+    return PaddleOcr(lang=shared.settings.ocr_lang)

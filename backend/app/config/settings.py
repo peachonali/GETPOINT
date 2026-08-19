@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     default_tenant_id: str = "v-club"
     # ที่เก็บไฟล์ (รูปใบเสร็จ) — วันหน้าเปลี่ยนเป็น S3 ค่อยเพิ่ม config ของ S3
     storage_dir: str = "storage_data"
+    # ocr: "paddle" = ของจริง · "fake" = คืนค่าคงที่ (ใช้เทส/ตอน dev ที่ไม่อยากโหลดโมเดล)
+    ocr_engine: str = "paddle"
+    ocr_lang: str = "th"
     # sms / gemini
     sms_api_key: str = ""
     gemini_api_key: str = ""

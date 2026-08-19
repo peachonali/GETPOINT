@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 
 from app.database.members import Member
 from app.external.notifier_interface import NotifierPort
+from app.image_prep.image_pipeline import prepare_for_ocr
 from app.jobs.job_queue import ScanJob
 from app.jobs.job_status import JobState, JobStatusStore
 from app.observability.logging import get_logger, log_context
@@ -89,9 +90,11 @@ class ScanJobRunner:
         member = self._load_member(session, job)
 
         image = self._images.get(job.tenant_id, job.receipt_id)
-        # TODO(Step 4): image = image_pipeline.prepare(image)  ← OpenCV crop/deskew/enhance
+        # ตัดพื้นหลัง → ดัดเอียง → ปรับความคมชัด · รูปที่เบลอ/มืดเกินถูกตีกลับตรงนี้
+        # (วัดจริงแล้วช่วยทั้งความแม่นและความเร็ว — ดู docs/decisions/0005)
+        prepared = prepare_for_ocr(image)
 
-        ocr_result = self._ocr.read(image)
+        ocr_result = self._ocr.read(prepared)
         # TODO(Step 5): merchant_resolver + template_matcher แทน extract_receipt_fields
         fields = extract_receipt_fields(ocr_result)
 
