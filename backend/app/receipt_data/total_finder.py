@@ -94,7 +94,45 @@ def find_total(
     if currency_total is not None:
         return TotalCandidate(currency_total, score=40, reason="ยอดที่มีสกุลเงินกำกับ")
 
+    # ★ ทางสุดท้ายจริงๆ: มี "ยอดย่อย" แต่หา "ยอดรวม" ไม่เจอเลย
+    #   ใบเสร็จไทยส่วนใหญ่รวม VAT ในราคาแล้ว (พิมพ์ว่า "ราคารวมภาษีมูลค่าเพิ่มแล้ว")
+    #   ยอดย่อยจึงเท่ากับยอดที่จ่ายจริง
+    #   เจอจริง: Dairy Queen ("Order Total" ถูกอ่านเหลือ "order") และ Pizza Company
+    #   ("Total 2,69" อ่านตกหลักจนใช้ไม่ได้) — ทั้งคู่มี Subtotal ที่ถูกต้องอยู่
+    #
+    #   ⚠ ใช้เมื่อ "ไม่มี VAT แยกบรรทัด" เท่านั้น — ถ้ามี VAT แยก แปลว่าต้องบวกเพิ่ม
+    #     และกรณีนั้นชั้นคณิตศาสตร์ด้านบนจะจับได้เองอยู่แล้ว
+    subtotal = _subtotal_amount(lines)
+    if subtotal is not None and not _has_separate_vat(lines):
+        return TotalCandidate(subtotal, score=30, reason="ยอดย่อย (ไม่พบยอดรวม, VAT รวมในราคา)")
+
     return None
+
+
+#: คำที่บอกว่าบรรทัดนี้คือ "ยอดย่อย"
+_SUBTOTAL_MARKERS = ("subtotal", "sub total", "ยอดรวมย่อย", "รวมย่อย")
+
+#: คำที่บอกว่าใบเสร็จ "แยกบรรทัด VAT" ไว้ต่างหาก (ต้องบวกเพิ่ม ไม่ใช่รวมแล้ว)
+_VAT_MARKERS = ("vat", "uat", "ภาษีมูลค่าเพิ่ม", "ภ.พ.", "ภพ.")
+
+
+def _subtotal_amount(lines: list[str]) -> float | None:
+    """ยอดย่อยที่มากที่สุดในใบเสร็จ (ใบเดียวอาจมีหลายบรรทัดย่อย)"""
+    values = [
+        amount for line in lines
+        if any(marker in line.lower() for marker in _SUBTOTAL_MARKERS)
+        for amount in [best_amount(line)] if amount is not None
+    ]
+    return max(values) if values else None
+
+
+def _has_separate_vat(lines: list[str]) -> bool:
+    """ใบเสร็จนี้แยกบรรทัด VAT พร้อมจำนวนเงินไว้ไหม"""
+    for line in lines:
+        lowered = line.lower()
+        if any(marker in lowered for marker in _VAT_MARKERS) and best_amount(line) is not None:
+            return True
+    return False
 
 
 def _only_currency_marked_amount(lines: list[str]) -> float | None:

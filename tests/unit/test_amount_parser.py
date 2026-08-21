@@ -140,3 +140,62 @@ def test_vat_must_actually_be_seven_percent():
     (เช่น 100 + 50 = 150 เป็นเลขบังเอิญ ไม่ใช่โครงสร้างภาษี)"""
     lines = ["SHOP", "100.00", "50.00", "150.00"]
     assert find_total(lines, keyword_total=None) is None
+
+
+# ═══════════════════════════════════════════
+# กฎเฉพาะที่ค้นพบจากใบเสร็จจริง (แต่ละข้อกู้ได้อย่างน้อย 1 ใบ)
+# ═══════════════════════════════════════════
+
+def test_currency_marked_amount_used_when_keyword_lost():
+    """สลิป QR PromptPay ของ KFC: คำว่า Total หลุดไปคนละบรรทัดกับยอด
+    แต่ "THB528.00" บอกตัวเองอยู่แล้วว่าเป็นเงิน"""
+    lines = [
+        "BIG C NAKORNSAWAN KFC-12102",
+        "APPR.CODE#636282 TRACE#071045 17:25.14",
+        "REF#2 47853174225684071045 THB528.00",
+        "Total IACKNOWLEDCE SAIISTACTORY RECEIPT",
+    ]
+    result = find_total(lines, keyword_total=None)
+    assert result.value == 528.00
+
+
+def test_subtotal_used_when_total_line_is_unusable():
+    """Pizza Company: "Total 2,69" อ่านตกหลักจนใช้ไม่ได้
+    แต่ "Subtotal 2,696" ถูกต้อง และใบนี้ VAT รวมในราคาแล้ว"""
+    lines = ["PIZZA COMPANY", "Subtotal 2,696", "Total 2,69"]
+    result = find_total(lines, keyword_total=None)
+    assert result.value == 2696.00
+
+
+def test_subtotal_not_used_when_vat_is_separate():
+    """★ ถ้าใบเสร็จแยกบรรทัด VAT ไว้ ยอดย่อยไม่ใช่ยอดที่จ่ายจริง
+    (ต้องบวก VAT เพิ่ม) — ห้ามใช้ยอดย่อยแทน"""
+    lines = ["SHOP", "Subtotal 100.00", "VAT 7% 7.00"]
+    result = find_total(lines, keyword_total=None)
+    assert result is None or result.value != 100.00
+
+
+# ═══════════════════════════════════════════
+# สลิปบัตรเติมเงิน (BigC FoodPark)
+# ═══════════════════════════════════════════
+
+def test_card_slip_uses_subtraction_over_shifted_label():
+    """ป้าย "Sale Amount" จับคู่กับตัวเลขเหลื่อมแถวเมื่อถ่ายเอียง (ได้ 225 ทั้งที่จ่าย 75)
+    การลบ 300 − 75 = 225 ให้คำตอบที่ถูก และเหลื่อมยังไงก็ยังลงตัวเหมือนเดิม"""
+    lines = [
+        "BIGC SUPERCENTER", "Card Balance", "300.00",
+        "Sale Anmount", "75.00", "Card Net Balance", "225.00",
+    ]
+    result = find_total(lines, keyword_total=225.00)
+    assert result.value == 75.00
+
+
+def test_card_slip_falls_back_to_footer_line():
+    """ลบไม่ลงตัว (OCR อ่านตก) → ใช้บรรทัดท้าย "Card No:xxx AMT: yyy"
+    ซึ่งมีป้ายกับตัวเลขอยู่แถวเดียวกัน จึงไม่มีปัญหาคอลัมน์เหลื่อม"""
+    lines = [
+        "FOODPark BIG C", "Cad Balance AMT: 35.00", "Sale Amount AMT: 35.00",
+        "Card Net Balance", "Card No:3210019969783 AMT 10.00",
+    ]
+    result = find_total(lines, keyword_total=35.00)
+    assert result.value == 10.00
