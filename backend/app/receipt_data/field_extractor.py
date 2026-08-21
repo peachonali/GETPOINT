@@ -76,10 +76,12 @@ def extract_receipt_fields(ocr: OcrResult) -> dict:
     lines = [line.strip() for line in ocr.lines() if line.strip()]
 
     # ชั้นที่ 1: หาจากคำสำคัญ ("รวมทั้งสิ้น" / "Total")
-    keyword_total = _find_total(lines)
+    keyword_total, keyword_is_exact = _find_total(lines)
 
     # ชั้นที่ 2-3: ★ ตรวจด้วยคณิตศาสตร์ — ยืนยันของชั้นแรก หรือกู้เคสที่ป้ายอ่านไม่ออก
-    candidate = find_total(lines, keyword_total=keyword_total)
+    candidate = find_total(
+        lines, keyword_total=keyword_total, keyword_is_exact=keyword_is_exact
+    )
     if candidate is None:
         raise InputValidationError("อ่านยอดเงินจากใบเสร็จไม่ได้ กรุณาถ่ายให้ชัดขึ้น")
 
@@ -97,7 +99,7 @@ def extract_receipt_fields(ocr: OcrResult) -> dict:
     }
 
 
-def _find_total(lines: list[str]) -> float | None:
+def _find_total(lines: list[str]) -> tuple[float | None, bool]:
     """หายอดรวมสุดท้ายจากบรรทัดที่มีคำสำคัญ · ไม่เจอ → None (ไม่เดาจากเลขที่ใหญ่สุด)
 
     วิธีเลือกเมื่อมีหลายบรรทัดเข้าข่าย (ใบเสร็จมักมีทั้ง subtotal/VAT/total):
@@ -105,15 +107,16 @@ def _find_total(lines: list[str]) -> float | None:
         2. เลือกคำสำคัญที่เจาะจงที่สุด ("รวมทั้งสิ้น" ชนะ "total")
         3. คำสำคัญเท่ากัน → เอาบรรทัดล่างสุด (ยอดสุดท้ายอยู่ท้ายใบเสมอ)
     """
-    best: tuple[int, int, float] | None = None  # (คะแนนคำสำคัญ, ลำดับบรรทัด, ยอด)
+    best: tuple[int, int, float, bool] | None = None  # (คะแนน, ลำดับบรรทัด, ยอด, ตรงเป๊ะ)
 
     for line_index, line in enumerate(lines):
         if _is_not_final_total(line):
             continue
 
-        keyword_rank = _match_total_keyword(line)
-        if keyword_rank is None:
+        matched = _match_total_keyword(line)
+        if matched is None:
             continue
+        keyword_rank, is_exact = matched
 
         amount = _last_amount_in(line)
         if amount is None:
@@ -124,11 +127,11 @@ def _find_total(lines: list[str]) -> float | None:
         if amount is None:
             continue
 
-        candidate = (keyword_rank, line_index, amount)
+        candidate = (keyword_rank, line_index, amount, is_exact)
         if best is None or candidate[:2] > best[:2]:
             best = candidate
 
-    return best[2] if best else None
+    return (best[2], best[3]) if best else (None, True)
 
 
 #: มองต่ำลงไปกี่บรรทัดเพื่อหาตัวเลขของป้ายที่อยู่บรรทัดบน
@@ -179,12 +182,14 @@ _FUZZY_NEGATIVE_WORDS = ("subtotal", "discount", "change")
 _FUZZY_NEGATIVE_THRESHOLD = 0.82
 
 
-def _match_total_keyword(line: str) -> int | None:
-    """คืน "คะแนนความเจาะจง" ของคำสำคัญที่เจอในบรรทัดนี้ (ยิ่งมากยิ่งเจาะจง)
+def _match_total_keyword(line: str) -> tuple[int, bool] | None:
+    """คืน (คะแนนความเจาะจง, ตรงเป๊ะไหม) ของคำสำคัญที่เจอในบรรทัดนี้
 
     ★ คำอังกฤษต้องตรงทั้งคำ (word boundary) ไม่ใช่แค่เป็นส่วนหนึ่งของคำอื่น
       — กัน "total" ไปแมตช์กับ "subtotal" ซึ่งเป็นบั๊กที่เคยเกิดจริง
       ส่วนคำไทยใช้การค้นแบบธรรมดา เพราะภาษาไทยไม่มีช่องว่างคั่นคำ
+
+    "ตรงเป๊ะไหม" ใช้ตอนตัดสินใจในที่ที่ต้องการความมั่นใจสูง (ดู total_finder)
     """
     lowered = line.lower()
     # ลองทั้งข้อความตามจริง และข้อความที่แก้ตัวสับสนแล้ว — เผื่อ OCR อ่านคลาดไปนิด
@@ -194,11 +199,11 @@ def _match_total_keyword(line: str) -> int | None:
         if keyword.isascii():
             pattern = rf"\b{re.escape(keyword)}"  # ไม่บังคับขอบท้าย — "Tota1149" ติดกับตัวเลข
             if any(re.search(pattern, variant) for variant in variants):
-                return rank
+                return rank, True
             if _fuzzy_contains(lowered, keyword):
-                return rank
+                return rank, False   # คล้ายพอ แต่ไม่ตรงเป๊ะ
         elif keyword in line:
-            return rank
+            return rank, True
 
     return None
 
@@ -207,7 +212,10 @@ def _match_total_keyword(line: str) -> int | None:
 #: เจอจริงบนใบเสร็จ Sizzler: "Balance Due" ถูกอ่านเป็น "Ralance Due" (B เพี้ยนเป็น R)
 #: ผลคือคำสำคัญจับไม่ได้ ระบบเลยไปหยิบ "Total 81" (ซึ่ง 81 คือยอด VAT) มาเป็นยอดรวม
 #: ทั้งที่ยอดจริง 1,240 อยู่ในบรรทัดเดียวกับ Balance Due นั่นเอง
-_FUZZY_KEYWORD_THRESHOLD = 0.85
+#: 0.80 = ยอมให้เพี้ยนได้ 1 ตัวใน 5 ("eotal" ≈ "total")
+#: เจอจริงบนใบเสร็จ KFC: "SOFTSERVE Total 35.00" ถูกอ่านเป็น "SOFJSEEotaL 35.00"
+#: ปลอดภัยพอเพราะบรรทัดที่มี subtotal/ส่วนลด/เงินทอน ถูกกรองออกไปก่อนหน้านี้แล้ว
+_FUZZY_KEYWORD_THRESHOLD = 0.80
 
 
 def _fuzzy_contains(line: str, keyword: str) -> bool:

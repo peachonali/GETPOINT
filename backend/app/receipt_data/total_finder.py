@@ -14,9 +14,10 @@
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
-from app.receipt_data.amount_parser import find_amounts
+from app.receipt_data.amount_parser import best_amount, find_amounts
 
 #: ยอมคลาดเคลื่อนได้เท่านี้ตอนตรวจสมการ — ใบเสร็จปัดเศษสตางค์กันคนละแบบ
 _MATH_TOLERANCE = 0.05
@@ -33,16 +34,41 @@ class TotalCandidate:
     reason: str
 
 
-def find_total(lines: list[str], *, keyword_total: float | None) -> TotalCandidate | None:
+def find_total(
+    lines: list[str],
+    *,
+    keyword_total: float | None,
+    keyword_is_exact: bool = True,
+) -> TotalCandidate | None:
     """สรุปยอดรวมจากหลักฐานทุกชั้น · ไม่มีหลักฐานพอ → None
 
-    keyword_total = ยอดที่ได้จากการหาคำสำคัญ (อาจเป็น None ถ้าป้ายอ่านไม่ออก)
+    keyword_total    ยอดที่ได้จากการหาคำสำคัญ (None ถ้าป้ายอ่านไม่ออก)
+    keyword_is_exact คำสำคัญตรงเป๊ะไหม หรือแค่ "คล้ายพอ" (fuzzy)
+                     ใช้ตัดสินในที่ที่ต้องการความมั่นใจสูงเป็นพิเศษ
     """
     amounts = _all_amounts(lines)
 
-    # ★ สลิปบัตรเติมเงินมีโครงสร้างของตัวเอง — ตรวจด้วยการลบได้ ตรวจก่อนวิธีอื่น
+    # ★ สลิปบัตรเติมเงินมีโครงสร้างของตัวเอง — ใช้กฎเฉพาะของมัน
     if _looks_like_stored_value_slip(lines):
-        return _total_from_card_slip(amounts)
+        # 1) ★ ความสัมพันธ์ ยอดในบัตร − ยอดที่ใช้ = คงเหลือ — เชื่อถือได้ที่สุด
+        #    เพราะต้องมีตัวเลขสามตัวลงตัวพร้อมกัน โอกาสที่ OCR อ่านผิดแล้วยังลงตัวต่ำมาก
+        from_subtraction = _total_from_card_slip(amounts)
+        if from_subtraction is not None:
+            return from_subtraction
+
+        # 2) ลบไม่ลงตัว (OCR อ่านตกไปตัวหนึ่ง) → ใช้บรรทัดท้าย "Card No:xxxx AMT: yyy"
+        #    ดีตรงที่ป้ายกับตัวเลขอยู่แถวเดียวกัน จึงไม่มีปัญหาคอลัมน์เหลื่อม
+        #    แต่เชื่อได้น้อยกว่าข้อ 1 เพราะบางใบมีตัวเลขคอลัมน์ข้างๆ ปนเข้ามา
+        from_footer = _total_from_card_footer(lines)
+        if from_footer is not None:
+            return from_footer
+
+        # ลบไม่ลงตัว (OCR อ่านเลขตกไปตัวหนึ่ง) → ยอมใช้ป้าย แต่ต้องตรงเป๊ะเท่านั้น
+        # เพราะบนสลิปพวกนี้ป้ายที่อ่านเพี้ยนมักมาคู่กับตัวเลขที่อ่านเพี้ยนด้วย
+        # (เจอจริง: "Sale Arneunt AMT 76.00" ทั้งที่ยอดจริง 75.00)
+        if keyword_total is not None and keyword_is_exact:
+            return TotalCandidate(keyword_total, score=45, reason="สลิปบัตร: ป้ายตรงเป๊ะ")
+        return None
 
     math_total = _total_from_arithmetic(amounts)
 
@@ -60,7 +86,38 @@ def find_total(lines: list[str], *, keyword_total: float | None) -> TotalCandida
     if math_total is not None:
         return TotalCandidate(math_total, score=60, reason="คณิตศาสตร์ (ไม่พบคำสำคัญ)")
 
+    # ★ ทางสุดท้าย: ยอดที่ "ติดป้ายสกุลเงิน" มาเอง (THB / ฿ / บาท)
+    #   บนสลิปชำระเงิน ตัวเลขที่มีสกุลเงินกำกับคือยอดธุรกรรมเสมอ ส่วนเลขอื่นเป็นรหัส
+    #   เจอจริงบนสลิป QR PromptPay ของ KFC: คำว่า "Total" หลุดไปอยู่คนละบรรทัด
+    #   กับยอด แต่ "THB528.00" บอกตัวเองอยู่แล้วว่าเป็นเงิน
+    currency_total = _only_currency_marked_amount(lines)
+    if currency_total is not None:
+        return TotalCandidate(currency_total, score=40, reason="ยอดที่มีสกุลเงินกำกับ")
+
     return None
+
+
+def _only_currency_marked_amount(lines: list[str]) -> float | None:
+    """ยอดที่มีสกุลเงินกำกับ · ใช้ได้เมื่อ "มีค่าเดียว" เท่านั้น
+
+    ถ้ามีหลายค่าแปลว่ากำกวม (ไม่รู้ว่าอันไหนยอดจ่ายจริง) → ไม่เดา
+    """
+    marked: set[float] = set()
+    for line in lines:
+        if _is_payment_context(line):
+            continue
+        marked.update(a.value for a in find_amounts(line) if a.has_currency and a.has_decimals)
+
+    return marked.pop() if len(marked) == 1 else None
+
+
+#: บรรทัดเงินสด/เงินทอน — มีสกุลเงินกำกับเหมือนกันแต่ไม่ใช่ยอดที่ต้องคิดแต้ม
+_PAYMENT_CONTEXT = ("cash", "change", "เงินสด", "เงินทอน", "ทอน", "balance")
+
+
+def _is_payment_context(line: str) -> bool:
+    lowered = line.lower()
+    return any(word in lowered for word in _PAYMENT_CONTEXT)
 
 
 #: ร่องรอยที่บอกว่านี่คือ "สลิปบัตรเติมเงิน" ไม่ใช่ใบเสร็จร้านค้าปกติ
@@ -73,6 +130,27 @@ _CARD_SLIP_MIN_MARKERS = 2  # ต้องเจอหลายที่ (สล
 def _looks_like_stored_value_slip(lines: list[str]) -> bool:
     text = " ".join(lines).lower()
     return sum(text.count(marker) for marker in _CARD_SLIP_MARKERS) >= _CARD_SLIP_MIN_MARKERS
+
+
+#: บรรทัดท้ายสลิปที่ระบุยอดธุรกรรม — "Card No:3210019969783 AMT: 10.00"
+#: (เลขบัตรถูกกรองทิ้งโดย amount_parser อยู่แล้วเพราะยาวเกินกว่าจะเป็นเงิน)
+_CARD_FOOTER = re.compile(r"c\w?rd\s*n[o0]", re.IGNORECASE)
+
+
+def _total_from_card_footer(lines: list[str]) -> TotalCandidate | None:
+    """ยอดจากบรรทัด "Card No ... AMT: xxx" ท้ายสลิป
+
+    ★ ทำไมเชื่อบรรทัดนี้มากกว่าป้าย "Sale Amount":
+      ป้ายกับตัวเลขบนสลิปอยู่คนละคอลัมน์ (ซ้าย/ขวา) พอถ่ายเอียง OCR จะจับคู่เหลื่อมแถว
+      แล้วได้ "ยอดคงเหลือในบัตร" มาแทน "ยอดที่ใช้จ่าย" — เจอจริงทั้งใบ #11 และ #14
+      ส่วนบรรทัดท้ายนี้มีทั้งป้ายและตัวเลขอยู่ในแถวเดียวกัน จึงไม่มีปัญหาเหลื่อม
+    """
+    for line in lines:
+        if _CARD_FOOTER.search(line):
+            amount = best_amount(line)
+            if amount is not None:
+                return TotalCandidate(amount, score=85, reason="สลิปบัตร: บรรทัดท้าย Card No")
+    return None
 
 
 def _total_from_card_slip(amounts: list[float]) -> TotalCandidate | None:
