@@ -16,6 +16,8 @@ from difflib import SequenceMatcher
 from app.observability.logging import get_logger
 from app.ocr.ocr_result import OcrResult
 from app.receipt_data.amount_parser import best_amount
+from app.receipt_data.datetime_parser import find_date, find_time
+from app.receipt_data.merchant_name import find_merchant
 from app.receipt_data.total_finder import find_total
 from app.reliability.errors import InputValidationError
 
@@ -92,9 +94,10 @@ def extract_receipt_fields(ocr: OcrResult) -> dict:
     total = candidate.value
 
     return {
-        "merchant": lines[0] if lines else "ไม่ทราบร้าน",  # บรรทัดแรกมักเป็นชื่อร้าน
+        "merchant": find_merchant(lines) or "ไม่ทราบร้าน",
         "receipt_no": _find_receipt_no(lines),
-        "receipt_date": _find_date(lines),  # ชื่อตรงกับ Receipt.receipt_date
+        "receipt_date": find_date(lines),      # ชื่อตรงกับ Receipt.receipt_date
+        "receipt_time": find_time(lines),
         "total_amount": total,
     }
 
