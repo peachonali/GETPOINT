@@ -13,8 +13,13 @@ import re
 from datetime import date, datetime
 from difflib import SequenceMatcher
 
+from app.observability.logging import get_logger
 from app.ocr.ocr_result import OcrResult
+from app.receipt_data.amount_parser import best_amount
+from app.receipt_data.total_finder import find_total
 from app.reliability.errors import InputValidationError
+
+log = get_logger(__name__)
 
 #: คำที่มักนำหน้า "ยอดรวมสุดท้าย" บนใบเสร็จไทย/อังกฤษ
 #: เรียงจากเจาะจงที่สุด (คะแนนสูง) ไปทั่วไปที่สุด — "รวมทั้งสิ้น" ชนะ "total" เสมอ
@@ -70,9 +75,19 @@ def extract_receipt_fields(ocr: OcrResult) -> dict:
     # บรรทัดเดียวเป็นหลายกล่อง ทำให้คำว่า "total" กับตัวเลขยอดหลุดไปคนละกล่อง
     lines = [line.strip() for line in ocr.lines() if line.strip()]
 
-    total = _find_total(lines)
-    if total is None:
+    # ชั้นที่ 1: หาจากคำสำคัญ ("รวมทั้งสิ้น" / "Total")
+    keyword_total = _find_total(lines)
+
+    # ชั้นที่ 2-3: ★ ตรวจด้วยคณิตศาสตร์ — ยืนยันของชั้นแรก หรือกู้เคสที่ป้ายอ่านไม่ออก
+    candidate = find_total(lines, keyword_total=keyword_total)
+    if candidate is None:
         raise InputValidationError("อ่านยอดเงินจากใบเสร็จไม่ได้ กรุณาถ่ายให้ชัดขึ้น")
+
+    log.info(
+        "สรุปยอดเงินได้",
+        extra={"amount": candidate.value, "score": candidate.score, "reason": candidate.reason},
+    )
+    total = candidate.value
 
     return {
         "merchant": lines[0] if lines else "ไม่ทราบร้าน",  # บรรทัดแรกมักเป็นชื่อร้าน
@@ -187,25 +202,8 @@ def _match_total_keyword(line: str) -> int | None:
 
 
 def _last_amount_in(line: str) -> float | None:
-    """เอาตัวเลขเงิน "ตัวสุดท้าย" ของบรรทัด
-
-    เพราะบรรทัดแบบ "ภาษีมูลค่าเพิ่ม 7% 16.36" มีเลข 7 นำหน้า ตัวที่เป็นเงินคือตัวท้าย
-    """
-    matches = _AMOUNT_PATTERN.findall(line)
-    if not matches:
-        return None
-
-    # ★ ถ้ามีตัวเลขที่มีทศนิยม ให้เชื่อตัวนั้นก่อน — บนใบเสร็จ "ยอดเงิน" มักมี .00 เสมอ
-    #   ส่วนเลขจำนวนเต็มมักเป็นรหัส/จำนวนชิ้น/เปอร์เซ็นต์ (เจอจริง: "VAT 7% 16.36")
-    decimals = [m for m in matches if "." in m]
-    chosen = (decimals or matches)[-1]
-
-    try:
-        amount = float(chosen.replace(",", ""))
-    except ValueError:
-        return None
-
-    return amount if amount >= _MIN_VALID_AMOUNT else None
+    """จำนวนเงินที่น่าเชื่อถือที่สุดในบรรทัด (ดู amount_parser — กันเวลา/วันที่/รหัส)"""
+    return best_amount(line)
 
 
 def _find_receipt_no(lines: list[str]) -> str | None:

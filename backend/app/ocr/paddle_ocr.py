@@ -15,8 +15,16 @@
 """
 from __future__ import annotations
 
+import os
 import threading
 from typing import Any
+
+# ★ ปิดการเช็คเน็ตตอนโหลดโมเดล — โมเดลถูกดาวน์โหลดไว้ในเครื่องแล้วตั้งแต่ติดตั้ง
+#   ถ้าไม่ปิด PaddleOCR จะพยายามต่อเน็ตทุกครั้งที่บูต ทำให้:
+#     - ช้าโดยไม่จำเป็น (และช้ามากถ้าเน็ตอืด)
+#     - worker บูตไม่ขึ้นถ้าเซิร์ฟเวอร์ไม่มีเน็ตออกนอก (ซึ่งเป็นการตั้งค่าที่ปลอดภัยกว่า)
+#   ต้องตั้งก่อน import paddleocr จึงวางไว้ระดับโมดูล ไม่ใช่ในฟังก์ชัน
+os.environ.setdefault("DISABLE_MODEL_SOURCE_CHECK", "True")
 
 import cv2
 import numpy as np
