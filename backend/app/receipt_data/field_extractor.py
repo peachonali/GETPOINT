@@ -195,10 +195,35 @@ def _match_total_keyword(line: str) -> int | None:
             pattern = rf"\b{re.escape(keyword)}"  # ไม่บังคับขอบท้าย — "Tota1149" ติดกับตัวเลข
             if any(re.search(pattern, variant) for variant in variants):
                 return rank
+            if _fuzzy_contains(lowered, keyword):
+                return rank
         elif keyword in line:
             return rank
 
     return None
+
+
+#: คำสำคัญที่ OCR อ่านเพี้ยนไป 1-2 ตัวอักษร ยังต้องจับได้
+#: เจอจริงบนใบเสร็จ Sizzler: "Balance Due" ถูกอ่านเป็น "Ralance Due" (B เพี้ยนเป็น R)
+#: ผลคือคำสำคัญจับไม่ได้ ระบบเลยไปหยิบ "Total 81" (ซึ่ง 81 คือยอด VAT) มาเป็นยอดรวม
+#: ทั้งที่ยอดจริง 1,240 อยู่ในบรรทัดเดียวกับ Balance Due นั่นเอง
+_FUZZY_KEYWORD_THRESHOLD = 0.85
+
+
+def _fuzzy_contains(line: str, keyword: str) -> bool:
+    """บรรทัดนี้มีคำที่ "คล้าย keyword พอ" ไหม (เทียบทีละช่วงความยาวเท่ากัน)
+
+    ใช้เฉพาะคำอังกฤษยาว ≥ 5 ตัวอักษร — คำสั้นเทียบแบบคล้ายจะชนกันมั่วเกินไป
+    """
+    if len(keyword) < 5:
+        return False
+
+    window = len(keyword)
+    for start in range(len(line) - window + 1):
+        chunk = line[start: start + window]
+        if SequenceMatcher(None, chunk, keyword).ratio() >= _FUZZY_KEYWORD_THRESHOLD:
+            return True
+    return False
 
 
 def _last_amount_in(line: str) -> float | None:

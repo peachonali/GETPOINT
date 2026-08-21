@@ -45,8 +45,19 @@ def test_dash_as_decimal_separator():
     assert best_amount("528-00") == 528.00
 
 
-def test_comma_as_decimal_separator():
-    assert best_amount("รวม 528,00") == 528.00
+def test_comma_with_only_two_digits_is_rejected_as_ambiguous():
+    """★ Pizza Company: ยอด "2,696" ถูก OCR อ่านตกเป็น "2,69"
+    ถ้าตีความจุลภาคเป็นจุดทศนิยมจะได้ 2.69 บาท ทั้งที่จริง 2,696 (ผิด 1,000 เท่า)
+
+    บนใบเสร็จไทยจุลภาคคือตัวคั่นหลักพัน ต้องตามด้วย 3 หลักเสมอ
+    เจอ 2 หลัก = อ่านตก → ปฏิเสธ ไม่เดา"""
+    assert best_amount("Total 2,69") is None
+    assert best_amount("รวม 528,00") is None
+
+
+def test_proper_thousand_separator_still_works():
+    assert best_amount("Subtotal 2,696") == 2696.00
+    assert best_amount("Total 1,240.00") == 1240.00
 
 
 def test_currency_prefix_glued_to_number():

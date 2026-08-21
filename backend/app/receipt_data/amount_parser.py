@@ -21,6 +21,16 @@ _DECIMAL_AMOUNT = re.compile(
     r"(?<![\w])(\d{1,3}(?:[,\s]\d{3})+|\d+)[.,\-](\d{2})(?![\d])"
 )
 
+#: ★ ตัวเลขที่ "จุลภาคตามด้วย 2 หลัก" — กำกวมและมักเป็น OCR อ่านตกหลัก
+#:
+#:   เจอจริงบนใบเสร็จ Pizza Company: ยอด "2,696" ถูกอ่านเป็น "2,69"
+#:   ถ้าตีความว่าจุลภาคคือจุดทศนิยม จะได้ยอด 2.69 บาท ทั้งที่จริง 2,696 บาท
+#:   (ผิดไป 1,000 เท่า — ลูกค้าจะได้แต้มแทบไม่มีเลย)
+#:
+#:   บนใบเสร็จไทย จุลภาคคือตัวคั่นหลักพัน ต้องตามด้วย 3 หลักเสมอ
+#:   เจอแบบ 2 หลักเมื่อไหร่ = อ่านตก ให้ทิ้งไปเลย ไม่เดา
+_TRUNCATED_THOUSANDS = re.compile(r"(?<![\w])\d{1,3},\d{2}(?![\d])")
+
 #: จำนวนเต็มที่ยืนเดี่ยว (ไม่มีสตางค์) เช่น "Total 1,240"
 _WHOLE_AMOUNT = re.compile(r"(?<![\w.,\-])(\d{1,3}(?:,\d{3})+|\d+)(?![\d.,\-])")
 
@@ -116,7 +126,10 @@ def _strip_non_money(line: str) -> str:
     # แยก "THB528.00" → "THB 528.00" ให้ตัวเลขยืนเดี่ยว (ทำก่อนลบอย่างอื่น)
     line = _CURRENCY_PREFIX.sub(r"\1 ", line)
 
-    for pattern in (_TIME_PATTERN, _DATE_WITH_MONTH, _DATE_LIKE, _CODE_NUMBER, _LONG_NUMBER):
+    for pattern in (
+        _TIME_PATTERN, _DATE_WITH_MONTH, _DATE_LIKE,
+        _CODE_NUMBER, _LONG_NUMBER, _TRUNCATED_THOUSANDS,
+    ):
         line = pattern.sub(" ", line)
     return line
 

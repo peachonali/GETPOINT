@@ -39,6 +39,11 @@ def find_total(lines: list[str], *, keyword_total: float | None) -> TotalCandida
     keyword_total = ยอดที่ได้จากการหาคำสำคัญ (อาจเป็น None ถ้าป้ายอ่านไม่ออก)
     """
     amounts = _all_amounts(lines)
+
+    # ★ สลิปบัตรเติมเงินมีโครงสร้างของตัวเอง — ตรวจด้วยการลบได้ ตรวจก่อนวิธีอื่น
+    if _looks_like_stored_value_slip(lines):
+        return _total_from_card_slip(amounts)
+
     math_total = _total_from_arithmetic(amounts)
 
     # ★ สองชั้นเห็นตรงกัน = มั่นใจที่สุด (โอกาสที่ OCR จะอ่านผิดแล้วบังเอิญลงตัวพอดีต่ำมาก)
@@ -54,6 +59,53 @@ def find_total(lines: list[str], *, keyword_total: float | None) -> TotalCandida
 
     if math_total is not None:
         return TotalCandidate(math_total, score=60, reason="คณิตศาสตร์ (ไม่พบคำสำคัญ)")
+
+    return None
+
+
+#: ร่องรอยที่บอกว่านี่คือ "สลิปบัตรเติมเงิน" ไม่ใช่ใบเสร็จร้านค้าปกติ
+#: (เจอในใบเสร็จจริงจาก BigC FoodPark — ใช้บัตรเติมเงินซื้ออาหารในศูนย์อาหาร)
+#: เขียนเป็นชิ้นสั้นๆ เพราะ OCR อ่านคำเต็มเพี้ยนบ่อย ("Card Balance" → "Cad Balance")
+_CARD_SLIP_MARKERS = ("balance", "baiance", "ยอดคงเหลือ", "คงเหลือ")
+_CARD_SLIP_MIN_MARKERS = 2  # ต้องเจอหลายที่ (สลิปมีทั้ง Card Balance และ Net Balance)
+
+
+def _looks_like_stored_value_slip(lines: list[str]) -> bool:
+    text = " ".join(lines).lower()
+    return sum(text.count(marker) for marker in _CARD_SLIP_MARKERS) >= _CARD_SLIP_MIN_MARKERS
+
+
+def _total_from_card_slip(amounts: list[float]) -> TotalCandidate | None:
+    """หา "ยอดที่ใช้จ่าย" จากสลิปบัตรเติมเงิน ด้วยความสัมพันธ์ทางคณิตศาสตร์
+
+    โครงสร้างของสลิปแบบนี้เสมอ:
+        ยอดในบัตรก่อนใช้ − ยอดที่ใช้ = ยอดคงเหลือ
+
+    ★ ทำไมต้องใช้วิธีนี้แทนการอ่านป้าย "Sale Amount":
+      สลิปพวกนี้พิมพ์ป้ายไว้ซ้าย ตัวเลขไว้ขวา พอถ่ายเอียง OCR จะจับคู่เหลื่อมกัน 1 แถว
+      แล้วได้ "ยอดในบัตร" มาแทน "ยอดที่ใช้" (เจอจริง: ได้ 225 ทั้งที่จ่ายจริง 75)
+      ส่วนการลบนั้นเหลื่อมยังไงก็ยังลงตัวเหมือนเดิม
+
+    ★ ใช้ "ลำดับที่ปรากฏบนสลิป" มาตัดสินความกำกวม:
+      ถ้าดูแค่ตัวเลข 300/75/225 จะได้ทั้ง 300−75=225 และ 300−225=75 (ถูกทั้งคู่ทางเลข)
+      แต่สลิปพิมพ์เรียงเสมอว่า ยอดในบัตร → ยอดที่ใช้ → ยอดคงเหลือ
+      จึงบังคับให้ทั้งสามค่าต้องเรียงตามลำดับนั้นในเอกสารด้วย
+
+    หาไม่เจอ → None (ยอมให้ลูกค้าถ่ายใหม่ ดีกว่าให้แต้มผิด)
+    """
+    for i, before in enumerate(amounts):
+        for j in range(i + 1, len(amounts)):
+            spent = amounts[j]
+            if spent >= before:
+                continue
+
+            remaining = before - spent
+            # ยอดคงเหลือต้องอยู่ "หลัง" ยอดที่ใช้ ตามลำดับที่พิมพ์บนสลิป
+            if any(abs(amounts[k] - remaining) <= _MATH_TOLERANCE
+                   for k in range(j + 1, len(amounts))):
+                return TotalCandidate(
+                    spent, score=80, reason="สลิปบัตร: ยอดในบัตร − ยอดที่ใช้ = คงเหลือ"
+                )
 
     return None
 
