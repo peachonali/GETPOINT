@@ -107,11 +107,17 @@ async job, แยก web/worker, Redis สำหรับ OTP+rate limit, circui
 
 ## 8. โครงสร้างไฟล์ปัจจุบัน
 
-Scaffold สร้างแล้ว ทุกไฟล์มี docstring + stub (`raise NotImplementedError` + TODO)
-ไฟล์ interface เขียน abstract จริง · `receipt_schema.py` เขียน Pydantic จริง · config รันได้จริง
 ดูโครงเต็มใน `GETPOINT_blueprint_v3.md` ส่วนที่ 4
 
-**สถานะตอนนี้:** scaffold เสร็จ (จบ Step 0 บางส่วน) · ยังไม่ได้เขียน logic ไฟล์ไหน · ไฟล์ถัดไปที่จะเขียนคือ `external/loga_client.py` (Step 1)
+### ★ สถานะปัจจุบัน → อ่าน `STATE.md`
+
+> **ไฟล์นี้ (CONTEXT) บอก "โปรเจกต์คืออะไร + ตกลงอะไรกันไว้" ซึ่งไม่เปลี่ยน**
+> **ส่วน "ตอนนี้ทำถึงไหน / ทำอะไรต่อ" อยู่ใน [`STATE.md`](STATE.md) ซึ่งอัปเดตเรื่อยๆ**
+>
+> ลำดับการอ่านสำหรับแชทใหม่: **`STATE.md`** → ไฟล์นี้ → blueprint → `docs/decisions/`
+
+สรุปสั้นๆ: Step 0-4 เสร็จแล้ว (โครงรัน, ต่อ loga, สมาชิก+OTP, ต่อเส้นสแกน→แต้ม, OCR จริง)
+ถัดไปคือกันใบซ้ำด้วยเลขอ้างอิง แล้วต่อด้วย Step 5 (merchant + template)
 
 ---
 
