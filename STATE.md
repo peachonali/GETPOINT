@@ -114,9 +114,18 @@ hard failure (ยอดนอกช่วง/วันอนาคต) 0/27  ←
 ต่อเข้า field_extractor แล้ว · วันนี้เป็น "สัญญาณความมั่นใจ" ที่ log ไว้เท่านั้น
 ยังไม่เอาไปกรอง (ยอดแม่น 96% อยู่แล้ว) · จะใช้จริงตอนเลื่อนขั้น template
 
-**ยังไม่เริ่ม (ตั้งใจ — เป็นของหนักที่ blueprint เลื่อนไว้):**
-template_matcher (ต้องใช้ bounding box) · template lifecycle · gemini_resolver ·
-prompt_guard · หน้า admin · ตาราง merchants/templates
+**เสร็จเพิ่ม:** prompt_guard + Gemini (ตัวสำรองอ่านใบเสร็จตอนกฎอ่านไม่ได้)
+- `security/prompt_guard.py` — ล้าง OCR text ก่อนเข้า AI (กัน prompt injection)
+- `external/ai_interface.py` + `gemini_client.py` + `fake_ai.py` — adapter + port + fake
+- `merchant/gemini_resolver.py` — ต่อ 3 ชั้น: sanitize → AI เดา → template_rules ตรวจ
+  ★ ห้ามเชื่อ AI โดยไม่ผ่านกฎ (ต่อให้ injection หลุด กฎคณิตศาสตร์จับค่ามั่วได้)
+
+⚠ **ยังไม่ต่อเข้า scan_job** — ต้องตั้ง `GEMINI_API_KEY` + `pip install google-genai` ก่อน
+  โครงพร้อม เทสครบ (gemini_client ใช้ lazy import ไม่พังถ้ายังไม่ติดตั้ง) รอเปิดสวิตช์ที่ composition
+
+**ยังไม่เริ่ม (ตั้งใจ — ของหนักที่ blueprint เลื่อนไว้):**
+template_matcher (ต้องใช้ bounding box) · template lifecycle · หน้า admin ·
+ตาราง merchants/templates
 
 **หมายเหตุ:** วันที่ 68% / เวลา 75% ที่ยังต่ำ ส่วนใหญ่เป็น date=None (อ่านไม่เจอ)
 กับ OCR อ่านเลขผิด (#13 06→05, #14 17→12) → แก้ได้ด้วย per-shop coordinate template
