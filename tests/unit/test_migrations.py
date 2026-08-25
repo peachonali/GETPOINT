@@ -12,6 +12,7 @@ from alembic.config import Config
 from sqlalchemy import create_engine, inspect
 
 from app.database.members import Member
+from app.database.receipts import ReceiptRecord
 from app.database.tenants import Tenant
 
 # tests/unit/test_migrations.py → ขึ้น 2 ชั้นถึง repo root → backend/alembic.ini
@@ -33,7 +34,7 @@ def test_upgrade_head_creates_all_tables(tmp_path):
     command.upgrade(_alembic_config(url), "head")
 
     tables = set(inspect(create_engine(url)).get_table_names())
-    assert {"tenants", "members"} <= tables
+    assert {"tenants", "members", "receipts"} <= tables
 
 
 def test_downgrade_removes_all_tables(tmp_path):
@@ -47,6 +48,7 @@ def test_downgrade_removes_all_tables(tmp_path):
     tables = set(inspect(create_engine(url)).get_table_names())
     assert "tenants" not in tables
     assert "members" not in tables
+    assert "receipts" not in tables
 
 
 def test_migration_schema_matches_models(tmp_path):
@@ -56,7 +58,7 @@ def test_migration_schema_matches_models(tmp_path):
     command.upgrade(_alembic_config(url), "head")
     inspector = inspect(create_engine(url))
 
-    for model in (Tenant, Member):
+    for model in (Tenant, Member, ReceiptRecord):
         migrated_columns = {col["name"] for col in inspector.get_columns(model.__tablename__)}
         model_columns = {col.name for col in model.__table__.columns}
         assert migrated_columns == model_columns, f"{model.__tablename__} schema ไม่ตรงกับ model"
