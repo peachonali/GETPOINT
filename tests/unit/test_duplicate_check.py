@@ -42,6 +42,7 @@ def _receipt(**overrides) -> Receipt:
     fields = dict(
         tenant_id=TENANT,
         merchant="ร้านทดสอบ",
+        merchant_code=None,
         receipt_no=None,
         receipt_date=date(2026, 6, 6),
         receipt_time=time(17, 13),
@@ -60,6 +61,7 @@ def _store(session, receipt: Receipt, *, member_id: int, status: str = STATUS_AW
         content_fingerprint=f"fp-{receipt.source_image_id}",
         image_fingerprint=f"img-{receipt.source_image_id}",
         merchant=receipt.merchant,
+        merchant_code=receipt.merchant_code,
         receipt_no=receipt.receipt_no,
         receipt_date=receipt.receipt_date,
         receipt_time=receipt.receipt_time,
@@ -182,6 +184,38 @@ def test_same_shop_same_day_same_amount_but_38_minutes_apart_is_not_duplicate(
         reference_codes=["23222"], receipt_time=time(17, 51), source_image_id="img-2",
     ), member_id=member_id)
     assert not verdict.is_duplicate
+
+
+def test_different_known_shop_is_not_duplicate(db_session, member_id):
+    """★ ซื้อของราคาเท่ากันจากคนละร้าน เวลาใกล้กัน = คนละใบแน่นอน
+
+    เกิดได้จริงในห้าง: ซื้อของ 79 บาทที่ร้านหนึ่ง แล้วเดินไปอีกร้านซื้ออีก 79 บาท
+    ถ้าไม่มีกฎนี้ ใบที่สองจะถูกบล็อกเพราะ ยอด+วัน+เวลา ใกล้กันหมด
+    """
+    _store(db_session, _receipt(merchant_code="kfc"), member_id=member_id)
+
+    verdict = find_duplicate(
+        db_session,
+        _receipt(merchant_code="dq", source_image_id="img-2"),
+        member_id=member_id,
+    )
+    assert not verdict.is_duplicate
+
+
+def test_unknown_shop_on_one_photo_does_not_release_a_duplicate(db_session, member_id):
+    """★ รู้จักร้านแค่ใบเดียว = "ไม่รู้" ต้องไม่กลายเป็นเหตุผลให้ปล่อยผ่าน
+
+    รูปคนละมุมของใบเดียวกันอาจอ่านร้านได้แค่รูปเดียว (วัดจริง: 27/28 ไม่ใช่ 28/28)
+    ถ้าตัดสินว่า "คนละร้าน" ตรงนั้น ใบซ้ำจะหลุด = ให้แต้มสองเท่า
+    """
+    _store(db_session, _receipt(merchant_code="kfc"), member_id=member_id)
+
+    verdict = find_duplicate(
+        db_session,
+        _receipt(merchant_code=None, source_image_id="img-2"),
+        member_id=member_id,
+    )
+    assert verdict.is_duplicate
 
 
 def test_different_amount_is_not_duplicate(db_session, member_id):

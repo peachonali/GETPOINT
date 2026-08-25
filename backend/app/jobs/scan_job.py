@@ -128,6 +128,7 @@ class ScanJobRunner:
         receipt = Receipt(
             tenant_id=job.tenant_id,
             merchant=fields["merchant"],
+            merchant_code=fields["merchant_code"],
             receipt_no=fields["receipt_no"],
             receipt_date=fields["receipt_date"],
             receipt_time=fields["receipt_time"],
@@ -216,6 +217,7 @@ class ScanJobRunner:
             ),
             image_fingerprint=image_fingerprint(job.tenant_id, image),
             merchant=receipt.merchant,
+            merchant_code=receipt.merchant_code,
             receipt_no=receipt.receipt_no,
             receipt_date=receipt.receipt_date,
             receipt_time=receipt.receipt_time,

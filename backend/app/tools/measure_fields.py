@@ -14,7 +14,11 @@
     วันที่/เวลา  ต้องตรงเป๊ะ — ใช้ตัดสินว่าคนละครั้งหรือไม่
     เลขอ้างอิง  ขอแค่ "อ่านได้ตรงกันทั้งสองรูปของใบเดียวกัน" ไม่ต้องตรงกับเฉลย
                  (อ่านเพี้ยนเหมือนกันทั้งคู่ ก็ใช้กันซ้ำได้ดีเท่ากัน)
-    ชื่อร้าน     ขอแค่ "มีคำของชื่อร้านจริงอยู่ในนั้น" — ใช้แค่แสดงให้ลูกค้าดู
+    ★ รหัสร้าน  ต้องตรงเป๊ะ — ผิดร้าน = ใช้ template ผิด = ลูกค้าทั้งร้านได้แต้มผิด
+                 (วัด "รหัส" ไม่ใช่ "ชื่อ" เพราะชื่อที่ OCR อ่านได้ใช้ตัดสินอะไรไม่ได้)
+
+⚠ รหัสร้านถูกอ่านหลังยอดเงิน ใบที่อ่านยอดไม่ได้จึงไม่มีรหัสร้านไปด้วย
+  (ใบ #17 — ตัวจับร้านเองอ่านออก แต่ระบบไม่ได้ไปถึงขั้นนั้น)
 """
 from __future__ import annotations
 
@@ -57,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
             f"{_short(name):>5} | {got:>8} {_mark(marks['amount']):<4} | "
             f"{_mark(marks['date']):<7} | {_mark(marks['time']):<7} | "
             f"{_mark(marks['reference']):<10} | {_mark(marks['merchant'])} "
-            f"{(reading.merchant or '')[:30]}"
+            f"{reading.merchant_code or '(ไม่รู้จัก)'}"
         )
 
     total = len(names)
@@ -67,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
         ("date", "วันที่ (ตรงเป๊ะ)"),
         ("time", "เวลา (ตรงถึงนาที)"),
         ("reference", "เลขอ้างอิง (อ่านได้อย่างน้อย 1 ตัว)"),
-        ("merchant", "ชื่อร้าน (มีคำของร้านจริง)"),
+        ("merchant", "★ รหัสร้าน (ตรงเป๊ะ · ผิด = ใช้ template ผิดร้าน)"),
     ):
         print(f"  {label:<38} {tally[field]:>3}/{total}  ({tally[field] / total * 100:.0f}%)")
 
@@ -109,17 +113,24 @@ def _reference_ok(reading: Reading, expected: dict) -> bool:
     return bool(reading.reference_codes)
 
 
-def _merchant_ok(reading: Reading, expected: dict) -> bool:
-    """มีคำใดคำหนึ่งของชื่อร้านจริงอยู่ในสิ่งที่อ่านได้ไหม (ยาว ≥ 3 ตัวอักษร)
+#: แบรนด์ในเฉลย → รหัสร้านในทะเบียน (app/merchant/known_merchant.py)
+_BRAND_TO_CODE = {
+    "KFC": "kfc",
+    "DQ": "dq",
+    "Sizzler": "sizzler",
+    "The Pizza Company": "the-pizza-company",
+    "V-Square": "vsquare",
+    "BIG C FOODPark": "bigc-foodpark",
+}
 
-    เกณฑ์หลวมโดยตั้งใจ — ชื่อร้านใช้แค่แสดงให้ลูกค้าดู ไม่ได้ใช้ตัดสินอะไร
-    (เคยใช้ตัดสินใบซ้ำแล้วพัง — ดู receipt_identity.py)
+
+def _merchant_ok(reading: Reading, expected: dict) -> bool:
+    """★ วัด "รหัสร้าน" ไม่ใช่ "ชื่อร้าน"
+
+    ชื่อร้านที่ OCR อ่านได้ใช้ตัดสินอะไรไม่ได้ (อ่านได้ไม่คงที่แม้ระหว่างสองรูป
+    ของใบเดียวกัน) ส่วนรหัสร้านมาจากเลขผู้เสียภาษีเป็นหลัก — ตัวนี้ต่างหากที่ระบบเอาไปใช้
     """
-    if not reading.merchant:
-        return False
-    got = reading.merchant.lower()
-    words = [w for w in expected["merchant_text"].lower().replace("/", " ").split() if len(w) >= 3]
-    return any(word in got for word in words)
+    return reading.merchant_code == _BRAND_TO_CODE[expected["merchant_brand"]]
 
 
 def _mark(ok: bool) -> str:

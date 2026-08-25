@@ -44,6 +44,7 @@ class Reading:
     lines: list[str]
     total_amount: float | None = None
     merchant: str | None = None
+    merchant_code: str | None = None
     receipt_no: str | None = None
     receipt_date: date | None = None
     receipt_time: clock | None = None
@@ -123,6 +124,7 @@ def _extract(name: str, lines: list[str], seconds: float) -> Reading:
         lines=lines,
         total_amount=fields["total_amount"],
         merchant=fields["merchant"],
+        merchant_code=fields["merchant_code"],
         receipt_no=fields["receipt_no"],
         receipt_date=fields["receipt_date"],
         receipt_time=fields["receipt_time"],

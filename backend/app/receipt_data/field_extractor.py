@@ -13,11 +13,12 @@ import re
 from datetime import date, datetime
 from difflib import SequenceMatcher
 
+from app.merchant.merchant_resolver import resolve
 from app.observability.logging import get_logger
 from app.ocr.ocr_result import OcrResult
 from app.receipt_data.amount_parser import best_amount
 from app.receipt_data.datetime_parser import find_date, find_time
-from app.receipt_data.merchant_name import find_merchant
+from app.receipt_data.line_items import find_line_items, items_match_total
 from app.receipt_data.reference_code import find_reference_codes
 from app.receipt_data.total_finder import find_total
 from app.reliability.errors import InputValidationError
@@ -94,12 +95,29 @@ def extract_receipt_fields(ocr: OcrResult) -> dict:
     )
     total = candidate.value
 
+    items = find_line_items(lines, total_amount=total)
+    if items:
+        # ★ ผลรวมราคารายการ = ยอดรวม คือหลักฐานทางคณิตศาสตร์ว่าอ่านทั้งใบถูก
+        #   วันนี้แค่บันทึกไว้ใน log — ยังไม่เอาไปตัดสินอะไร เพราะยังไม่มีหลักฐานว่า
+        #   การเอาไปกรองจะช่วยมากกว่าทำให้ครอบคลุมลดลง (ยอดเงินตอนนี้แม่น 96% ผิด 0%)
+        #   ตัวที่จะใช้ค่านี้จริงคือ template_rules.py ตอน Step 5 (ดู CONTEXT ข้อ 4)
+        log.info(
+            "อ่านรายการสินค้าได้",
+            extra={"items": len(items), "sum_matches_total": items_match_total(items, total)},
+        )
+
+    # ★ ชื่อร้านที่ลูกค้าเห็น มาจากทะเบียนร้านเมื่อรู้จัก ไม่ใช่จากที่ OCR อ่านได้
+    #   (ที่ OCR อ่านได้เป็นข้อความมั่วบ่อยมาก — ดู merchant_resolver)
+    merchant = resolve(lines)
+
     return {
-        "merchant": find_merchant(lines) or "ไม่ทราบร้าน",
+        "merchant": merchant.display_name,
+        "merchant_code": merchant.code,
         "receipt_no": _find_receipt_no(lines),
         "receipt_date": find_date(lines),      # ชื่อตรงกับ Receipt.receipt_date
         "receipt_time": find_time(lines),
         "reference_codes": find_reference_codes(lines),
+        "items": items,
         "total_amount": total,
     }
 

@@ -97,6 +97,7 @@ def _to_receipt(reading: Reading) -> Receipt:
     return Receipt(
         tenant_id=TENANT,
         merchant=reading.merchant or "ไม่ทราบร้าน",
+        merchant_code=reading.merchant_code,
         receipt_no=reading.receipt_no,
         receipt_date=reading.receipt_date,
         receipt_time=reading.receipt_time,
@@ -122,6 +123,7 @@ def _to_record(receipt: Receipt, reading: Reading, purchase_id: str, *, member_i
         + reading.name,
         image_fingerprint=reading.name,
         merchant=receipt.merchant,
+        merchant_code=receipt.merchant_code,
         receipt_no=receipt.receipt_no,
         receipt_date=receipt.receipt_date,
         receipt_time=receipt.receipt_time,

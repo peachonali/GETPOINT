@@ -67,6 +67,8 @@ class ReceiptRecord(Base):
 
     #: ค่าที่อ่านได้จากใบเสร็จ (อาจว่างได้ทุกตัว ยกเว้นยอดเงิน)
     merchant: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    #: ★ รหัสร้านที่คงที่ — ใช้ตัดสินใจ (ชื่อร้านด้านบนใช้แค่แสดงผล)
+    merchant_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     receipt_no: Mapped[str | None] = mapped_column(String(100), nullable=True)
     receipt_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     receipt_time: Mapped[time | None] = mapped_column(Time, nullable=True)

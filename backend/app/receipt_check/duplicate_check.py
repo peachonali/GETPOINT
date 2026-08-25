@@ -139,16 +139,27 @@ def _compare(receipt: Receipt, stored: ReceiptRecord, *, member_id: int) -> Dupl
     if stored.member_id != member_id:
         return DuplicateVerdict(False, "คนละสมาชิก และไม่มีเลขอ้างอิงตรงกัน")
 
-    # ── กฎ 2: วันที่ห่างกันเกินที่ OCR จะอ่านพลาดได้ = คนละใบ ──
+    # ── กฎ 2: คนละร้าน (และรู้จักร้านทั้งสองใบ) = คนละใบแน่นอน ──
+    #
+    # ★ ใช้ "รหัสร้าน" ไม่ใช่ "ชื่อร้าน" — ชื่อที่ OCR อ่านได้ไม่คงที่ระหว่างรูปของใบเดียวกัน
+    #   ส่วนรหัสร้านมาจากเลขผู้เสียภาษีเป็นหลัก (วัดจริง 27/28 ถูก · ผิด 0)
+    #
+    # ★ ต้องรู้จักทั้งสองใบเท่านั้น — ถ้าใบใดใบหนึ่งอ่านร้านไม่ออก แปลว่า "ไม่รู้"
+    #   ซึ่งต้องไม่กลายเป็นเหตุผลให้ปล่อยผ่าน (รูปคนละมุมของใบเดียวกันอาจอ่านร้าน
+    #   ได้แค่รูปเดียว — ถ้าตัดสินว่าคนละใบตรงนั้น ใบซ้ำจะหลุด)
+    if _merchants_clearly_differ(receipt.merchant_code, stored.merchant_code):
+        return DuplicateVerdict(False, "คนละร้าน")
+
+    # ── กฎ 3: วันที่ห่างกันเกินที่ OCR จะอ่านพลาดได้ = คนละใบ ──
     if _dates_clearly_differ(receipt.receipt_date, stored.receipt_date):
         return DuplicateVerdict(False, "วันที่บนใบเสร็จต่างกันชัดเจน")
 
-    # ── กฎ 3: วันเดียวกัน แต่เวลาห่างกันเกินเกณฑ์ = คนละครั้ง ──
+    # ── กฎ 4: วันเดียวกัน แต่เวลาห่างกันเกินเกณฑ์ = คนละครั้ง ──
     gap = _minutes_apart(receipt.receipt_time, stored.receipt_time)
     if gap is not None and gap > _DIFFERENT_PURCHASE_MINUTES:
         return DuplicateVerdict(False, f"เวลาบนใบเสร็จห่างกัน {gap:.0f} นาที")
 
-    # ── กฎ 4: เหลือแค่นี้แปลว่าแยกไม่ออก → ถือว่าซ้ำ (ฝั่งปลอดภัย) ──
+    # ── กฎ 5: เหลือแค่นี้แปลว่าแยกไม่ออก → ถือว่าซ้ำ (ฝั่งปลอดภัย) ──
     # ครอบคลุมทั้ง "ใบเดียวกันแต่อ่านเลขอ้างอิงไม่ได้" และ "ใบเสร็จคู่กับสลิปบัตร"
     return DuplicateVerdict(
         True, "ยอดเงิน วันที่ และเวลา ตรงกับใบที่เคยรับไว้ จนแยกไม่ออก", stored
@@ -161,6 +172,17 @@ def _shared_reference(receipt: Receipt, stored: ReceiptRecord) -> str | None:
         if code.lower() in stored_codes:
             return code
     return None
+
+
+def _merchants_clearly_differ(left: str | None, right: str | None) -> bool:
+    """รหัสร้านต่างกันจน "เชื่อได้ว่าเป็นคนละใบ" ไหม
+
+    รู้จักร้านแค่ใบเดียว (หรือไม่รู้จักเลย) = ตอบว่า "ไม่ต่างชัดเจน"
+    → ไปให้กฎถัดไปตัดสิน · การไม่รู้ต้องไม่กลายเป็นเหตุผลให้ปล่อยผ่าน
+    """
+    if left is None or right is None:
+        return False
+    return left != right
 
 
 def _dates_clearly_differ(left: date | None, right: date | None) -> bool:
