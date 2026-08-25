@@ -106,8 +106,21 @@
 - duplicate_check มีกฎใหม่: **คนละร้านที่รู้จักทั้งคู่ = คนละใบแน่นอน**
   (กันเคสซื้อของราคาเท่ากันสองร้านในห้างเดียวกัน แล้วใบที่สองถูกบล็อก)
 
-**ยังไม่เริ่ม:** template_matcher · template_rules · template lifecycle ·
-gemini_resolver · prompt_guard · หน้า admin อนุมัติ · ตาราง merchants/templates
+**เสร็จเพิ่ม:** `template_rules.py` — กฎตรวจค่าทางคณิตศาสตร์ (CONTEXT ข้อ 4)
+```
+math ยืนยัน (ผลรวมรายการ=ยอดรวม)  13/27 ใบ
+hard failure (ยอดนอกช่วง/วันอนาคต) 0/27  ← ไม่มี false positive
+```
+ต่อเข้า field_extractor แล้ว · วันนี้เป็น "สัญญาณความมั่นใจ" ที่ log ไว้เท่านั้น
+ยังไม่เอาไปกรอง (ยอดแม่น 96% อยู่แล้ว) · จะใช้จริงตอนเลื่อนขั้น template
+
+**ยังไม่เริ่ม (ตั้งใจ — เป็นของหนักที่ blueprint เลื่อนไว้):**
+template_matcher (ต้องใช้ bounding box) · template lifecycle · gemini_resolver ·
+prompt_guard · หน้า admin · ตาราง merchants/templates
+
+**หมายเหตุ:** วันที่ 68% / เวลา 75% ที่ยังต่ำ ส่วนใหญ่เป็น date=None (อ่านไม่เจอ)
+กับ OCR อ่านเลขผิด (#13 06→05, #14 17→12) → แก้ได้ด้วย per-shop coordinate template
+ที่รู้พิกัดบรรทัดวันที่ ซึ่งต้องมี bounding box (ตอนนี้ flatten เป็น text แล้ว) — งานใหญ่
 
 ---
 
