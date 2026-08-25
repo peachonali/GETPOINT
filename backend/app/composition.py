@@ -30,6 +30,7 @@ from app.external.sms_client import SmsClient
 from app.external.sms_interface import SmsPort
 from app.jobs.job_queue import JobQueue
 from app.jobs.job_status import JobStatusStore
+from app.reliability.resilient_crm import ResilientCrm
 from app.jobs.scan_job import ScanJobRunner
 from app.member.member_link import MemberLinker
 from app.member.member_service import MemberService
@@ -83,13 +84,17 @@ def build_shared(settings: Settings) -> Shared:
         http_client=http,
         timeout_seconds=settings.loga_timeout_seconds,
     )
-    crm = LogaClient(
-        base_url=settings.loga_base_url,
-        card_id=settings.loga_card_id,
-        device_id=settings.loga_device_id,
-        token_provider=token_provider,
-        http_client=http,
-        timeout_seconds=settings.loga_timeout_seconds,
+    # ★ ห่อ CRM ด้วย circuit breaker + retry ที่นี่ที่เดียว (composition root)
+    #   ชั้นบนเห็นแค่ CrmPort ไม่รู้ว่ามีการห่อ — สลับเปิด/ปิดความทนล่มได้จากจุดนี้จุดเดียว
+    crm = ResilientCrm(
+        LogaClient(
+            base_url=settings.loga_base_url,
+            card_id=settings.loga_card_id,
+            device_id=settings.loga_device_id,
+            token_provider=token_provider,
+            http_client=http,
+            timeout_seconds=settings.loga_timeout_seconds,
+        )
     )
 
     return Shared(

@@ -36,7 +36,7 @@
 | 3 | ★ ต่อเส้นสแกน→แต้มทะลุทั้งสาย | ✅ เสร็จ (e2e ผ่าน) |
 | **4** | **OCR จริง (OpenCV + PaddleOCR)** | ✅ **เสร็จ — ยอดเงินแม่น 96%, ผิด 0%** |
 | **5** | merchant + template + Gemini + admin | 🟡 **รู้จักร้านได้แล้ว 96% (ผิด 0) · template/Gemini/admin ยังไม่เริ่ม** |
-| **6** | ทนล่ม (retry, circuit breaker, DLQ, Excel) | 🟡 **กันใบซ้ำเสร็จแล้ว · ที่เหลือยังไม่เริ่ม** |
+| **6** | ทนล่ม (retry, circuit breaker, DLQ, Excel) | 🟡 **กันซ้ำ + retry + circuit breaker เสร็จ · DLQ/Excel ยังไม่ทำ** |
 | 7 | เก็บงาน (metrics, retention, audit) | ⬜ ยังไม่เริ่ม |
 
 **ประมาณ 65-70% ของงานทั้งหมด** · 329 เทสผ่าน (1 skip)
