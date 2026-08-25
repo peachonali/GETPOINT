@@ -17,6 +17,10 @@ dist/
 # ข้อมูลรันไทม์
 storage_data/
 
+# แคชผล OCR ของเครื่องมือวัด — ผูกกับเวลาแก้ไขไฟล์รูปในเครื่องนั้น
+# commit ไปก็ใช้ไม่ได้บนเครื่องอื่น (แคชจะหมดอายุทันที) และทำ diff รก
+tests/fixtures/expected/.ocr_cache.json
+
 # IDE / OS
 .vscode/
 .idea/

@@ -36,6 +36,24 @@ class InputValidationError(GetpointError):
     retryable = False
 
 
+class DuplicateReceiptError(GetpointError):
+    """ใบเสร็จใบนี้เคยถูกใช้รับแต้มไปแล้ว (ดู receipt_check/duplicate_check.py)
+
+    ★ ไม่ใช่ "ระบบพัง" และไม่ใช่ "ลูกค้าทำผิด" — เป็นผลลัพธ์เชิงธุรกิจที่ตั้งใจให้เกิด
+      จึงแยกออกจาก InputValidationError เพื่อให้ log/สถิติแยกสองเรื่องนี้ออกจากกันได้
+      (ใบซ้ำเยอะ = พฤติกรรมลูกค้า · อ่านไม่ออกเยอะ = คุณภาพ OCR — คนละปัญหากันคนละวิธีแก้)
+
+    retryable=False — ส่งรูปเดิมใหม่กี่ครั้งก็ซ้ำเหมือนเดิม
+    """
+
+    retryable = False
+
+    def __init__(self, message: str, *, reason: str) -> None:
+        super().__init__(message)
+        #: เหตุผลเชิงเทคนิคว่าตัดสินจากอะไร — ใส่ log/หน้าแอดมิน ไม่ใช่ข้อความหาลูกค้า
+        self.reason = reason
+
+
 class AuthenticationError(GetpointError):
     """ผู้เรียกไม่ได้ยืนยันตัวตน / token ไม่ถูกต้อง (LINE token หาย / ผิด / หมดอายุ)
 

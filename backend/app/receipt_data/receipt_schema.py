@@ -10,7 +10,7 @@
 ⚠ field ชื่อ receipt_date ไม่ใช่ date โดยตั้งใจ — ชื่อ date จะไปทับชนิด date
   ที่ import มา ทำให้ไฟล์นี้ import ไม่ได้เลย (เจอตอนต่อ pipeline จริงใน Step 3)
 """
-from datetime import date
+from datetime import date, time
 
 from pydantic import BaseModel, Field
 
@@ -20,11 +20,20 @@ class Receipt(BaseModel):
 
     tenant_id: str
     #: ชื่อร้านตามที่อ่านได้จากใบเสร็จ
+    #: ⚠ ค่านี้ใช้ "แสดงให้ลูกค้าดู" เท่านั้น ห้ามใช้ตัดสินว่าใบซ้ำ
+    #:   วัดจากของจริงแล้วอ่านได้ไม่คงที่ระหว่างรูปของใบเดียวกัน (ดู reference_code.py)
     merchant: str
     #: เลขที่ใบเสร็จ — บางร้านไม่มี (มีผลต่อความแม่นของการกันใบซ้ำ)
     receipt_no: str | None = None
     #: วันที่บนใบเสร็จ (ไม่ใช่วันที่สแกน)
     receipt_date: date | None = None
+    #: ★ เวลาบนใบเสร็จ — สัญญาณที่แยก "ซื้อสองครั้งยอดเท่ากันวันเดียวกัน" ออกจาก "ใบซ้ำ"
+    #:   เจอของจริง: DQ 79 บาท 2 ใบในวันเดียวกัน ห่างกัน 38 นาที
+    #:   ถ้าไม่มีเวลา ระบบแยกสองใบนี้ไม่ออกเลย
+    receipt_time: time | None = None
+    #: ★ เลขอ้างอิงของธุรกรรม (Invoice ID / TRANS ID / Tax INV ...) — ดู reference_code.py
+    #:   สัญญาณกันซ้ำที่แข็งที่สุด เพราะอ่านได้ตรงกันแม้ถ่ายคนละมุม
+    reference_codes: list[str] = Field(default_factory=list)
     #: ★ ยอดที่ใช้คิดแต้ม — ต้องมากกว่า 0 เสมอ (ยอด 0/ติดลบ = อ่านผิดแน่นอน)
     total_amount: float = Field(gt=0)
     #: รหัสสาขา (ถ้าใบเสร็จระบุ) — ส่งต่อให้ CRM ได้

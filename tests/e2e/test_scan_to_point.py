@@ -8,8 +8,10 @@ import cv2
 import fakeredis
 import numpy as np
 import pytest
+from sqlalchemy.orm import Session
 
 from app.database.members import Member
+from app.database.receipts import STATUS_AWARDED, STATUS_FAILED, ReceiptRecord
 from app.external.fake_loga import FakeLoga
 from app.external.fake_notifier import FakeNotifier
 from app.jobs.job_queue import JobQueue, ScanJob
@@ -18,6 +20,7 @@ from app.jobs.scan_job import ScanJobRunner
 from app.ocr.fake_ocr import FakeOcr
 from app.points.crm_formula_strategy import CrmFormulaStrategy
 from app.points.point_service import PointService
+from app.reliability.errors import ExternalServiceError
 from app.storage.image_store import ImageStore
 from app.storage.local_storage import LocalStorage
 
@@ -110,7 +113,7 @@ def test_scan_to_point(world):
 
 def test_reference_prevents_double_points(world):
     """ใบเดียวกันถูกประมวลผลซ้ำ (worker ทำซ้ำ/ลูกค้าส่งซ้ำ) → ต้องไม่ได้แต้มสองเท่า
-    ★ นี่คือการพิสูจน์ว่า idempotency ผ่าน reference ทำงานจริงทั้งสาย"""
+    ★ นี่คือการพิสูจน์ว่าการกันแต้มซ้ำทำงานจริงทั้งสาย"""
     world["runner"].run(world["session"], world["job"])
     balance_after_first = world["loga"].find_customer(PHONE).points_balance
 
@@ -118,6 +121,94 @@ def test_reference_prevents_double_points(world):
 
     assert world["loga"].find_customer(PHONE).points_balance == balance_after_first
     assert len(world["loga"].awards) == 1, "CRM ต้องบันทึกรายการเดียว"
+
+
+# ═══════════════════════════════════════════
+# ★ ด่านกันใบซ้ำ — ต่อกับ scan_job จริงไหม
+# ═══════════════════════════════════════════
+
+def test_receipt_row_is_written_before_points_are_sent(world):
+    """ต้องมีร่องรอยในฐานข้อมูลเสมอว่าเคยรับใบนี้ไปแล้ว
+
+    ★ ก่อนหน้านี้ระบบไม่เคยจำอะไรเลย → ต่อให้คำนวณลายนิ้วมือแม่นแค่ไหน
+      ก็ไม่มีอะไรให้เทียบ → กันใบซ้ำไม่ได้เลย
+    """
+    world["runner"].run(world["session"], world["job"])
+
+    rows = world["session"].query(ReceiptRecord).all()
+    assert len(rows) == 1
+    assert rows[0].status == STATUS_AWARDED
+    assert rows[0].total_amount == 250.0
+    assert rows[0].crm_reference, "ต้องจำ reference ที่ส่งให้ CRM ไว้"
+
+
+def test_receipt_row_survives_a_crash_after_points_were_sent(world, db_engine):
+    """★★ แต้มออกไปแล้ว แต่โค้ดพังก่อนงานจบ → แถวใบเสร็จต้องยังอยู่
+
+    worker ของจริงเปิด session ใหม่ต่อ 1 งาน แล้วปิดทิ้งโดยไม่ commit เมื่อพัง
+    ถ้าแถวใบเสร็จยังไม่ถูก commit ตอนนั้น มันจะหายไปทั้งแถว
+    → ลูกค้าส่งใหม่แล้วได้แต้มอีกรอบ ทั้งที่แต้มรอบแรกเข้าไปแล้ว = ให้แต้มสองเท่า
+
+    เทสนี้เกิดจากการทดลองทำลายโค้ด: เปลี่ยน commit เป็น flush แล้วเทสยังเขียวหมด
+    เพราะเทสเดิมใช้ session เดียวตลอด จึงมองไม่เห็นว่าแถวไม่ได้ถูก commit
+    """
+    def award_then_crash(**kwargs):
+        world["loga"].awards.append(kwargs)
+        raise RuntimeError("พังหลังแต้มออกไปแล้ว")
+
+    world["loga"].add_points = award_then_crash
+    world["runner"].run(world["session"], world["job"])   # worker ต้องไม่ตาย
+
+    # session ตัวใหม่ = มองเห็นเฉพาะสิ่งที่ commit ลงฐานข้อมูลจริงแล้วเท่านั้น
+    with Session(db_engine) as fresh:
+        rows = fresh.query(ReceiptRecord).all()
+    assert len(rows) == 1, "แถวใบเสร็จต้องอยู่รอด ไม่งั้นส่งใหม่จะได้แต้มซ้ำ"
+
+
+def test_duplicate_receipt_tells_customer_why(world):
+    """ส่งซ้ำแล้วต้องได้ข้อความที่อ่านรู้เรื่อง ไม่ใช่ "เกิดข้อผิดพลาด" ลอยๆ"""
+    world["runner"].run(world["session"], world["job"])
+    world["notifier"].sent.clear()
+
+    world["runner"].run(world["session"], world["job"])
+
+    assert world["status"].get("job-1").state is JobState.FAILED
+    assert "เคยใช้รับแต้มไปแล้ว" in world["status"].get("job-1").message
+    assert world["notifier"].sent, "ต้องแจ้งลูกค้าว่าเกิดอะไรขึ้น"
+    assert world["session"].query(ReceiptRecord).count() == 1, "ห้ามเขียนแถวซ้ำ"
+
+
+def test_customer_can_retry_after_crm_failure(world):
+    """★ CRM ล่มรอบแรก → ลูกค้าส่งใหม่ต้องได้แต้ม ไม่ใช่โดนบล็อกว่า "ใบซ้ำ"
+
+    นี่คือกับดักที่ตามมาจากการบันทึกใบเสร็จก่อนส่งแต้ม:
+    ถ้าแถวที่ส่งไม่สำเร็จไปบล็อกการส่งใหม่ ลูกค้าจะไม่มีวันได้แต้มของใบนี้เลย
+    """
+    def boom(**kwargs):
+        raise ExternalServiceError("crm", "CRM ล่ม")
+
+    original = world["loga"].add_points
+    world["loga"].add_points = boom
+    world["runner"].run(world["session"], world["job"])
+    assert world["session"].query(ReceiptRecord).one().status == STATUS_FAILED
+
+    world["loga"].add_points = original          # CRM กลับมาแล้ว
+    world["runner"].run(world["session"], world["job"])
+
+    assert len(world["loga"].awards) == 1, "ต้องได้แต้ม"
+    assert world["status"].get("job-1").state is JobState.SUCCEEDED
+    rows = world["session"].query(ReceiptRecord).all()
+    assert len(rows) == 1, "ต้องใช้แถวเดิม ไม่สร้างแถวใหม่"
+    assert rows[0].status == STATUS_AWARDED
+
+
+def test_points_are_reported_to_customer(world):
+    """ลูกค้าต้องรู้ว่าใบนี้ได้กี่แต้ม (250 บาท ÷ 100 = 2 แต้ม)"""
+    world["runner"].run(world["session"], world["job"])
+
+    _user_id, message = world["notifier"].sent[0]
+    assert "2 แต้ม" in message
+    assert world["session"].query(ReceiptRecord).one().points_awarded == 2
 
 
 # ═══════════════════════════════════════════
