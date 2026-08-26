@@ -32,6 +32,14 @@ class ImageStore:
     def get(self, tenant_id: str, receipt_id: str) -> bytes:
         return self._storage.load(self._key(tenant_id, receipt_id))
 
+    def delete_by_key(self, key: str) -> bool:
+        """ลบรูปด้วย key ที่เก็บไว้ใน DB (source_image_id) — ใช้ตอน retention
+
+        รับ key ตรงๆ เพราะ retention มี key จาก DB อยู่แล้ว ไม่ต้องประกอบใหม่จาก
+        tenant+receipt (และ key อาจมาจากรูปแบบเก่าถ้าเปลี่ยน template ในอนาคต)
+        """
+        return self._storage.delete(key)
+
     @staticmethod
     def _key(tenant_id: str, receipt_id: str) -> str:
         return _KEY_TEMPLATE.format(tenant_id=tenant_id, receipt_id=receipt_id)

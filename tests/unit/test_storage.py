@@ -36,6 +36,24 @@ def test_creates_nested_folders(storage):
     assert storage.exists("a/b/c/deep.jpg")
 
 
+def test_delete_existing_file(storage):
+    """ลบไฟล์ที่มีอยู่ → True แล้วไฟล์หายจริง (ใช้ตอน retention)"""
+    storage.save("receipts/v-club/x.jpg", IMAGE)
+    assert storage.delete("receipts/v-club/x.jpg") is True
+    assert not storage.exists("receipts/v-club/x.jpg")
+
+
+def test_delete_missing_file_is_not_error(storage):
+    """★ ลบของที่ไม่มี → False ไม่ใช่ error (retention รันซ้ำบนของที่ลบไปแล้วได้)"""
+    assert storage.delete("receipts/v-club/nope.jpg") is False
+
+
+def test_delete_guards_path_traversal(storage):
+    """ลบก็ต้องกัน path traversal เหมือน save/load"""
+    with pytest.raises(ValueError):
+        storage.delete("../../etc/passwd")
+
+
 def test_missing_file_raises(storage):
     with pytest.raises(FileNotFoundError):
         storage.load("ไม่มีไฟล์นี้.jpg")

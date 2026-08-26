@@ -20,6 +20,7 @@ from types import FrameType
 from app.composition import build_resender, build_scan_runner, build_shared
 from app.config.settings import settings
 from app.database.db import SessionLocal
+from app.maintenance.retention import purge_old_images
 from app.observability.logging import get_logger, setup_logging
 
 log = get_logger(__name__)
@@ -31,11 +32,15 @@ POLL_BLOCK_SECONDS = 5
 #: 60 วิ = ไม่ถี่จนกวน loga ตอนมันเพิ่งฟื้น แต่เร็วพอที่ลูกค้าไม่ต้องรอนานหลัง loga กลับมา
 RESEND_INTERVAL_SECONDS = 60
 
+#: ลบรูปเก่าตามกำหนด (PDPA) ทุกกี่วินาที — วันละครั้งพอ (ข้อมูลไม่ได้เพิ่มเร็ว)
+RETENTION_INTERVAL_SECONDS = 24 * 60 * 60
+
 
 class Worker:
     def __init__(self) -> None:
         self._running = True
         self._last_resend = 0.0  # เวลาล่าสุดที่ส่งใบค้างซ้ำ (monotonic)
+        self._last_purge = 0.0   # เวลาล่าสุดที่ลบรูปเก่า (monotonic)
 
     def request_stop(self, signum: int, _frame: FrameType | None) -> None:
         """ตัวรับสัญญาณปิด — แค่ยกธง ไม่ตัดงานที่กำลังทำอยู่กลางคัน"""
@@ -49,6 +54,7 @@ class Worker:
         shared = build_shared(settings)
         runner = build_scan_runner(shared)
         resender = build_resender(shared)
+        self._images = shared.images
         self._last_resend = 0.0
         log.info("GETPOINT worker เริ่มทำงาน รอรับงานจากคิว")
 
@@ -56,8 +62,9 @@ class Worker:
             while self._running:
                 job = shared.job_queue.dequeue(block_seconds=POLL_BLOCK_SECONDS)
                 if job is None:
-                    # ว่างจากงานสแกน — ใช้จังหวะนี้ส่งใบที่ค้างซ้ำ (ถ้าถึงรอบ)
+                    # ว่างจากงานสแกน — ใช้จังหวะนี้ทำงานเบื้องหลัง (ถ้าถึงรอบ)
                     self._maybe_resend(resender)
+                    self._maybe_purge_images()
                     continue
 
                 # session ใหม่ต่อ 1 งาน — งานที่พังจะไม่ทิ้ง transaction ค้างให้งานถัดไป
@@ -92,6 +99,21 @@ class Worker:
                 )
         except Exception as exc:  # noqa: BLE001 — งานเสริมต้องไม่ทำ worker ตาย
             log.warning("ส่งใบค้างซ้ำล้มเหลว (จะลองใหม่รอบหน้า)", extra={"detail": str(exc)})
+
+    def _maybe_purge_images(self) -> None:
+        """ลบรูปเก่าตามกำหนด PDPA ถ้าครบรอบ — งานเสริม ล้มแล้วต้องไม่ทำ worker ตาย"""
+        now = time.monotonic()
+        if now - self._last_purge < RETENTION_INTERVAL_SECONDS:
+            return
+        self._last_purge = now
+
+        try:
+            with SessionLocal() as session:
+                result = purge_old_images(session, self._images)
+            if result.images_deleted:
+                log.info("ลบรูปเก่าตามกำหนด PDPA", extra={"deleted": result.images_deleted})
+        except Exception as exc:  # noqa: BLE001
+            log.warning("ลบรูปเก่าล้มเหลว (จะลองใหม่รอบหน้า)", extra={"detail": str(exc)})
 
 
 def main() -> None:

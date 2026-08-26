@@ -34,6 +34,14 @@ class LocalStorage(StoragePort):
     def exists(self, key: str) -> bool:
         return self._resolve(key).is_file()
 
+    def delete(self, key: str) -> bool:
+        """ลบไฟล์ · ไม่มีอยู่แล้ว → False (ไม่ error) เพื่อให้ retention รันซ้ำได้"""
+        path = self._resolve(key)
+        if not path.is_file():
+            return False
+        path.unlink()
+        return True
+
     def _resolve(self, key: str) -> Path:
         """แปลง key เป็น path จริง + ยืนยันว่าไม่หลุดออกนอก base (กัน path traversal)"""
         candidate = (self._base / key).resolve()

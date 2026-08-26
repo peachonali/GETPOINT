@@ -11,3 +11,12 @@ class StoragePort(ABC):
     @abstractmethod
     def load(self, key: str) -> bytes:
         raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, key: str) -> bool:
+        """ลบไฟล์ · คืน True ถ้ามีไฟล์ให้ลบ, False ถ้าไม่มีอยู่แล้ว (ไม่ถือเป็น error)
+
+        ใช้กับ retention (PDPA — ลบรูปใบเสร็จตามกำหนดอายุ)
+        ลบของที่ไม่มีอยู่แล้วต้องไม่พัง เพราะ retention อาจรันซ้ำบนของที่ลบไปแล้ว
+        """
+        raise NotImplementedError
