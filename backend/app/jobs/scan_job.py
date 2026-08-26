@@ -39,6 +39,7 @@ from app.receipt_data.receipt_identity import content_fingerprint, image_fingerp
 from app.receipt_data.receipt_schema import Receipt
 from app.reliability.errors import DuplicateReceiptError, GetpointError, InputValidationError
 from app.storage.image_store import ImageStore
+from app.storage.ocr_text_store import OcrTextStore
 
 log = get_logger(__name__)
 
@@ -75,12 +76,15 @@ class ScanJobRunner:
         points: PointService,
         notifier: NotifierPort,
         status_store: JobStatusStore,
+        ocr_text_store: OcrTextStore | None = None,
     ) -> None:
         self._images = image_store
         self._ocr = ocr
         self._points = points
         self._notifier = notifier
         self._status = status_store
+        #: เก็บข้อความ OCR ดิบไว้ audit/debug — ไม่มีก็ทำงานได้ (ข้อมูลเสริม)
+        self._ocr_text = ocr_text_store
 
     def run(self, session: Session, job: ScanJob) -> None:
         """ทำงาน 1 ใบให้จบ — ไม่โยน exception ออกไป (worker ต้องไม่ตายเพราะงานใบเดียว)"""
@@ -122,7 +126,7 @@ class ScanJobRunner:
         prepared = prepare_for_ocr(image)
 
         ocr_result = self._ocr.read(prepared)
-        # TODO(Step 5): merchant_resolver + template_matcher แทน extract_receipt_fields
+        self._save_ocr_text(job, ocr_result)
         fields = extract_receipt_fields(ocr_result)
 
         receipt = Receipt(
@@ -239,6 +243,18 @@ class ScanJobRunner:
             log.info("ชน unique constraint ของใบเสร็จ (มีตัวอื่นเขียนแทรก)")
             raise DuplicateReceiptError(_DUPLICATE_MESSAGE, reason="ลายนิ้วมือเนื้อหาซ้ำ") from exc
         return record
+
+    def _save_ocr_text(self, job: ScanJob, ocr_result) -> None:
+        """เก็บข้อความ OCR ดิบไว้ audit — ★ ล้มแล้วห้ามล้มงาน (เป็นข้อมูลเสริม)
+
+        ถ้าเก็บไม่ได้ (ดิสก์เต็ม ฯลฯ) การให้แต้มต้องเดินต่อได้ตามปกติ
+        """
+        if self._ocr_text is None:
+            return
+        try:
+            self._ocr_text.put(job.tenant_id, job.receipt_id, ocr_result.lines())
+        except Exception as exc:  # noqa: BLE001
+            log.warning("เก็บข้อความ OCR ไม่สำเร็จ (ข้ามไป)", extra={"detail": str(exc)})
 
     @staticmethod
     def _load_member(session: Session, job: ScanJob) -> Member:

@@ -15,7 +15,9 @@ from app.database.members import Member
 from app.jobs.job_queue import JobQueue
 from app.jobs.job_status import JobState, JobStatusStore
 from app.main import app
+from app.reliability.idempotency import IdempotencyStore
 from app.routes.dependencies import (
+    get_idempotency_store,
     get_image_store,
     get_job_queue,
     get_job_status,
@@ -70,6 +72,7 @@ def ctx(db_session, tmp_path):
     app.dependency_overrides[get_scan_rate_limiter] = lambda: RateLimiter(
         redis, max_hits=20, window_seconds=600
     )
+    app.dependency_overrides[get_idempotency_store] = lambda: IdempotencyStore(redis)
 
     yield {
         "client": TestClient(app), "queue": queue, "status": status_store,
@@ -109,6 +112,16 @@ def test_submit_stores_the_image(ctx):
     stored = ctx["images"].get(TENANT, job.receipt_id)
     assert stored.startswith(b"\xff\xd8\xff"), "ต้องเก็บเป็น JPEG ที่ผ่าน upload_check แล้ว"
     assert resp.headers["Location"] == f"/jobs/{job.job_id}"
+
+
+def test_double_submit_same_image_returns_same_job(ctx):
+    """★ กดรัวไฟล์เดิม → job เดิม + คิวมีงานเดียว (ไม่สร้างงานซ้ำ)"""
+    photo = _photo()
+    first = ctx["client"].post("/scan", files=_upload(photo), headers=HEADER)
+    second = ctx["client"].post("/scan", files=_upload(photo), headers=HEADER)
+
+    assert first.json()["job_id"] == second.json()["job_id"]
+    assert ctx["queue"].pending_count() == 1, "ต้องมีงานเดียวในคิว ไม่ใช่สองงาน"
 
 
 def test_status_is_queued_right_after_submit(ctx):

@@ -23,6 +23,7 @@ from app.points.point_service import PointService
 from app.reliability.errors import ExternalServiceError
 from app.storage.image_store import ImageStore
 from app.storage.local_storage import LocalStorage
+from app.storage.ocr_text_store import OcrTextStore
 
 TENANT = "v-club"
 LINE_USER = "U-line-1"
@@ -65,12 +66,14 @@ def world(db_session, tmp_path):
     images = ImageStore(LocalStorage(tmp_path / "storage"))
     image_key = images.put(TENANT, RECEIPT_ID, IMAGE)
 
+    ocr_text = OcrTextStore(LocalStorage(tmp_path / "storage"))
     runner = ScanJobRunner(
         image_store=images,
         ocr=ocr,
         points=PointService(CrmFormulaStrategy(loga, formula_id="7")),
         notifier=notifier,
         status_store=status_store,
+        ocr_text_store=ocr_text,
     )
     job = ScanJob(
         job_id="job-1", tenant_id=TENANT, member_id=member.id,
@@ -80,7 +83,7 @@ def world(db_session, tmp_path):
     return {
         "runner": runner, "job": job, "session": db_session, "redis": redis,
         "loga": loga, "notifier": notifier, "ocr": ocr, "status": status_store,
-        "member": member,
+        "member": member, "ocr_text": ocr_text,
     }
 
 
@@ -209,6 +212,15 @@ def test_points_are_reported_to_customer(world):
     _user_id, message = world["notifier"].sent[0]
     assert "2 แต้ม" in message
     assert world["session"].query(ReceiptRecord).one().points_awarded == 2
+
+
+def test_ocr_text_saved_for_audit(world):
+    """★ ข้อความ OCR ดิบถูกเก็บไว้ audit — เปิดดูย้อนหลังได้ว่าระบบอ่านอะไรมา"""
+    world["runner"].run(world["session"], world["job"])
+
+    saved = world["ocr_text"].get(TENANT, RECEIPT_ID)
+    assert saved, "ต้องมีข้อความ OCR เก็บไว้"
+    assert any("250" in line for line in saved)
 
 
 # ═══════════════════════════════════════════

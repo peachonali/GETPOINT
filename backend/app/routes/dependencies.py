@@ -10,9 +10,11 @@ from __future__ import annotations
 
 from fastapi import Request
 
+from app.external.crm_interface import CrmPort
 from app.jobs.job_queue import JobQueue
 from app.jobs.job_status import JobStatusStore
 from app.member.member_service import MemberService
+from app.reliability.idempotency import IdempotencyStore
 from app.security.auth_guard import LineTokenVerifier
 from app.security.rate_limit import RateLimiter
 from app.storage.image_store import ImageStore
@@ -54,3 +56,11 @@ def get_formula_id(request: Request) -> str:
 def get_admin_token(request: Request) -> str:
     """โทเคนแอดมินที่ตั้งไว้ (ว่าง = ปิดหน้า admin) — แยกเป็น dependency ให้เทส override ได้"""
     return request.app.state.admin_token
+
+
+def get_crm(request: Request) -> CrmPort:
+    return request.app.state.crm
+
+
+def get_idempotency_store(request: Request) -> IdempotencyStore:
+    return request.app.state.idempotency

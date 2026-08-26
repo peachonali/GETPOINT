@@ -22,12 +22,14 @@ from app.receipt_data.receipt_identity import image_fingerprint
 from app.reliability.errors import InputValidationError, RateLimitedError
 from app.routes.auth_routes import require_line_user
 from app.routes.dependencies import (
+    get_idempotency_store,
     get_image_store,
     get_job_queue,
     get_job_status,
     get_scan_rate_limiter,
     get_tenant_id,
 )
+from app.reliability.idempotency import IdempotencyStore
 from app.security.rate_limit import RateLimiter
 from app.security.upload_check import MAX_UPLOAD_BYTES, check_and_clean_image
 from app.storage.image_store import ImageStore
@@ -48,6 +50,7 @@ def submit_scan(
     queue: JobQueue = Depends(get_job_queue),
     status_store: JobStatusStore = Depends(get_job_status),
     limiter: RateLimiter = Depends(get_scan_rate_limiter),
+    idempotency: IdempotencyStore = Depends(get_idempotency_store),
 ) -> dict:
     """รับรูปใบเสร็จ 1 ใบเข้าคิว · ตอบ 202 พร้อม job_id ให้เอาไปถามสถานะต่อ"""
     with log_context(tenant_id=tenant_id):
@@ -60,10 +63,19 @@ def submit_scan(
 
         # receipt_id มาจากลายนิ้วมือของไฟล์ → ส่งไฟล์เดิมซ้ำจะทับ key เดิม ไม่เปลืองที่เก็บ
         receipt_id = image_fingerprint(tenant_id, cleaned)
-        image_key = images.put(tenant_id, receipt_id, cleaned)
 
+        # ★ กดรัวไฟล์เดิมใน 5 นาที → คืน job เดิม ไม่สร้างงานซ้ำ (ดู idempotency.py)
+        #   ผูกคีย์กับ "คน + ไฟล์" เพื่อไม่ให้คนละคนที่ส่งไฟล์เหมือนกันมาบล็อกกัน
+        new_job_id = uuid.uuid4().hex
+        claimed = idempotency.claim(f"scan:{tenant_id}:{line_user_id}:{receipt_id}", new_job_id)
+        if claimed is not None:
+            log.info("คำขอสแกนซ้ำ — คืน job เดิม", extra={"job_id": claimed})
+            response.headers["Location"] = f"/jobs/{claimed}"
+            return {"job_id": claimed, "state": JobState.QUEUED.value}
+
+        image_key = images.put(tenant_id, receipt_id, cleaned)
         job = ScanJob(
-            job_id=uuid.uuid4().hex,
+            job_id=new_job_id,
             tenant_id=tenant_id,
             member_id=member.id,
             receipt_id=receipt_id,

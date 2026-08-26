@@ -46,6 +46,7 @@ from app.security.auth_guard import LineTokenVerifier
 from app.security.rate_limit import RateLimiter
 from app.storage.image_store import ImageStore
 from app.storage.local_storage import LocalStorage
+from app.storage.ocr_text_store import OcrTextStore
 
 log = get_logger(__name__)
 
@@ -65,6 +66,7 @@ class Shared:
     redis: Redis
     crm: CrmPort
     images: ImageStore
+    ocr_text: OcrTextStore
     job_queue: JobQueue
     job_status: JobStatusStore
 
@@ -98,12 +100,16 @@ def build_shared(settings: Settings) -> Shared:
         )
     )
 
+    # รูปกับข้อความ OCR ใช้ storage ตัวเดียวกัน — ลบพร้อมกันตอน retention
+    storage = LocalStorage(settings.storage_dir)
+
     return Shared(
         settings=settings,
         http=http,
         redis=redis_client,
         crm=crm,
-        images=ImageStore(LocalStorage(settings.storage_dir)),
+        images=ImageStore(storage),
+        ocr_text=OcrTextStore(storage),
         job_queue=JobQueue(redis_client),
         job_status=JobStatusStore(redis_client),
     )
@@ -143,6 +149,7 @@ def build_scan_runner(shared: Shared) -> ScanJobRunner:
         ),
         notifier=_build_notifier(shared),
         status_store=shared.job_status,
+        ocr_text_store=shared.ocr_text,
     )
 
 
