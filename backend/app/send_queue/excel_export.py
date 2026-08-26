@@ -23,10 +23,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database.members import Member
-from app.database.receipts import STATUS_FAILED, STATUS_PENDING, ReceiptRecord
+from app.database.receipts import STATUS_DEAD, STATUS_FAILED, STATUS_PENDING, ReceiptRecord
 
 #: สถานะที่ถือว่า "ยังไม่ได้แต้ม" — ต้องเอาออกมากู้คืนด้วยมือ
-_UNSENT_STATUSES = (STATUS_FAILED, STATUS_PENDING)
+#: รวม DEAD ด้วย เพราะ dead letter คือใบที่ระบบยอมแพ้แล้ว → ยิ่งต้องกู้ด้วยมือ
+_UNSENT_STATUSES = (STATUS_FAILED, STATUS_PENDING, STATUS_DEAD)
 
 #: หัวตารางในไฟล์ Excel — ภาษาอังกฤษเพื่อให้ตรงกับหน้า Import ของ loga
 #: (ปรับให้ตรงกับของจริงเมื่อยืนยันแล้ว)

@@ -13,9 +13,14 @@
   ถ้า loga ยังล่ม วงจรจะเปิด แล้ว resend รอบนี้เลิกทันที ไม่กระหน่ำซ้ำ
   งานยังเป็น FAILED รอรอบหน้า
 
-⚠ ยังไม่มี "เลิกส่งหลังลอง N รอบ" (dead letter) — ใบที่ส่งไม่ได้จริงๆ จะถูกลองเรื่อยๆ
-  ตราบใดที่ยังลองแล้วเป็น error ที่ retryable · การตัดสินว่า "พอแล้ว ให้คนดู" เป็นงานถัดไป
-  (ตอนนี้ทางออกคือ excel_export ให้คนกู้ด้วยมือ — ปลอดภัยพอสำหรับตอนนี้)
+★ แยก 2 สาเหตุของการล้ม ชัดเจน (สำคัญมาก):
+    ระบบล่ม (retryable: timeout/วงจรเปิด) → หยุดทั้ง batch · ไม่นับเป็นความผิดของใบนี้
+                                            ใบถัดไปก็จะล่มเหมือนกัน ลองต่อเปล่าประโยชน์
+    ปฏิเสธเฉพาะใบ (ไม่ retryable: loga ปฏิเสธ) → นับ send_attempts +1 · ครบเกณฑ์ย้ายไป DEAD
+                                                แล้วไปใบถัดไป (ใบพังใบเดียวต้องไม่บล็อกทั้งคิว)
+
+  ถ้าไม่แยก: ใบที่ loga ปฏิเสธตลอด (เช่น reference มีปัญหา) จะเป็นใบเก่าสุดที่ล้มก่อน
+  แล้วบล็อกใบอื่นทั้งคิวไปตลอดกาล → dead letter คือทางออกของเคสนี้
 """
 from __future__ import annotations
 
@@ -25,7 +30,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database.members import Member
-from app.database.receipts import STATUS_AWARDED, STATUS_FAILED, ReceiptRecord
+from app.database.receipts import STATUS_AWARDED, STATUS_DEAD, STATUS_FAILED, ReceiptRecord
 from app.external.crm_interface import CrmPort
 from app.observability.logging import get_logger, log_context
 from app.points.point_rate import points_for
@@ -36,6 +41,10 @@ log = get_logger(__name__)
 #: ข้อความที่ลูกค้าจะเห็นในประวัติแต้มของตัวเอง (เหมือนตอนส่งครั้งแรก)
 _REMARK = "สะสมแต้มจากใบเสร็จ {merchant}"
 
+#: ปฏิเสธเฉพาะใบนี้เกินกี่ครั้ง → ยอมแพ้ ย้ายไป DEAD ให้คนดู
+#: 5 ครั้ง = เผื่อ loga สะดุดชั่วคราวหลายรอบ แต่ไม่ลองไปตลอดกาลจนบล็อกคิว
+_MAX_SEND_ATTEMPTS = 5
+
 
 @dataclass(frozen=True)
 class ResendSummary:
@@ -44,6 +53,8 @@ class ResendSummary:
     attempted: int
     succeeded: int
     still_failing: int
+    #: ใบที่ถูกย้ายไป DEAD ในรอบนี้ (ปฏิเสธเฉพาะใบเกินเกณฑ์) — ต้องให้คนดู
+    dead_lettered: int = 0
 
 
 class PointResender:
@@ -62,8 +73,9 @@ class PointResender:
         """
         pending = self._fetch_failed(session)
         succeeded = 0
+        dead = 0
 
-        for index, record in enumerate(pending):
+        for record in pending:
             member = session.get(Member, record.member_id)
             if member is None or not member.crm_customer_id:
                 continue  # สมาชิกหาย/ยังไม่ผูก CRM — ข้าม ไม่ใช่หน้าที่ resend แก้
@@ -72,11 +84,33 @@ class PointResender:
                 self._resend_one(session, record, member.crm_customer_id)
                 succeeded += 1
             except GetpointError as exc:
-                log.warning("ส่งซ้ำไม่สำเร็จ หยุดรอบนี้", extra={"detail": str(exc)})
-                # ใบที่เหลือในรอบนี้ยังไม่ได้ลอง = ยังค้างต่อ
-                return ResendSummary(len(pending), succeeded, len(pending) - succeeded)
+                if exc.retryable:
+                    # ★ ระบบล่ม (timeout/วงจรเปิด) — ไม่ใช่ความผิดของใบนี้
+                    #   หยุดทั้ง batch · ใบถัดไปก็จะล่มเหมือนกัน ลองต่อเปล่าประโยชน์
+                    log.warning("ระบบปลายทางยังล่ม หยุดรอบนี้", extra={"detail": str(exc)})
+                    remaining = len(pending) - succeeded - dead
+                    return ResendSummary(len(pending), succeeded, remaining, dead)
 
-        return ResendSummary(len(pending), succeeded, len(pending) - succeeded)
+                # ★ loga ปฏิเสธเฉพาะใบนี้ (เช่น reference มีปัญหา) — นับ แล้วไปใบถัดไป
+                #   ใบพังใบเดียวต้องไม่บล็อกทั้งคิว
+                if self._mark_failure(session, record, str(exc)):
+                    dead += 1
+
+        remaining = len(pending) - succeeded - dead
+        return ResendSummary(len(pending), succeeded, remaining, dead)
+
+    def _mark_failure(self, session: Session, record: ReceiptRecord, detail: str) -> bool:
+        """นับความล้มเหลวเฉพาะใบ · ครบเกณฑ์ → ย้ายไป DEAD · คืน True ถ้าเพิ่งย้าย"""
+        record.send_attempts += 1
+        became_dead = record.send_attempts >= _MAX_SEND_ATTEMPTS
+        if became_dead:
+            record.status = STATUS_DEAD
+            log.error(
+                "ย้ายใบเสร็จไป dead letter — ปฏิเสธซ้ำเกินเกณฑ์",
+                extra={"receipt_id": record.id, "attempts": record.send_attempts, "detail": detail},
+            )
+        session.commit()
+        return became_dead
 
     def _fetch_failed(self, session: Session) -> list[ReceiptRecord]:
         statement = (

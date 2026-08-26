@@ -31,7 +31,8 @@ from app.database.db import Base
 #: เพราะเพิ่มสถานะใหม่แล้วไม่ต้อง migrate ชนิดข้อมูล ซึ่งบน Postgres ทำยากกว่าที่ควร
 STATUS_PENDING = "PENDING"    # บันทึกแล้ว แต่ยังไม่รู้ผลการส่งแต้ม
 STATUS_AWARDED = "AWARDED"    # ส่งแต้มเข้า CRM สำเร็จ
-STATUS_FAILED = "FAILED"      # ส่งไม่สำเร็จ — ยังกันซ้ำอยู่ แต่ยังไม่ได้แต้ม
+STATUS_FAILED = "FAILED"      # ส่งไม่สำเร็จ — ยังกันซ้ำอยู่ แต่ยังไม่ได้แต้ม (จะถูกส่งซ้ำ)
+STATUS_DEAD = "DEAD"          # ส่งซ้ำแล้วโดนปฏิเสธเฉพาะใบนี้เกินเกณฑ์ — ต้องให้คนดู (dead letter)
 STATUS_REJECTED = "REJECTED"  # ถูกปฏิเสธ (เช่นตรวจพบว่าซ้ำ)
 
 
@@ -85,6 +86,9 @@ class ReceiptRecord(Base):
     crm_reference: Mapped[str | None] = mapped_column(String(100), nullable=True)
     #: แต้มที่ได้จากใบนี้ (ตามที่ CRM ตอบกลับ หรือที่เราคำนวณเอง)
     points_awarded: Mapped[int | None] = mapped_column(nullable=True)
+    #: จำนวนครั้งที่ส่งแต้มแล้วโดน "ปฏิเสธเฉพาะใบนี้" — ครบเกณฑ์ → ย้ายไป DEAD
+    #: (ระบบล่มทั้งระบบไม่นับ เพราะไม่ใช่ความผิดของใบนี้ — ดู send_queue.py)
+    send_attempts: Mapped[int] = mapped_column(default=0, server_default="0")
 
     #: key ของรูปต้นฉบับใน storage — ไว้ย้อนดูหลักฐานเมื่อลูกค้าทักท้วง
     source_image_id: Mapped[str] = mapped_column(String(200))

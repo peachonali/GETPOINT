@@ -31,6 +31,7 @@ from app.external.sms_interface import SmsPort
 from app.jobs.job_queue import JobQueue
 from app.jobs.job_status import JobStatusStore
 from app.reliability.resilient_crm import ResilientCrm
+from app.send_queue.send_queue import PointResender
 from app.jobs.scan_job import ScanJobRunner
 from app.member.member_link import MemberLinker
 from app.member.member_service import MemberService
@@ -143,6 +144,11 @@ def build_scan_runner(shared: Shared) -> ScanJobRunner:
         notifier=_build_notifier(shared),
         status_store=shared.job_status,
     )
+
+
+def build_resender(shared: Shared) -> PointResender:
+    """ตัวส่งแต้มค้าง (FAILED) เข้า CRM ใหม่ — worker เรียกเป็นรอบตอนว่างงาน"""
+    return PointResender(shared.crm, formula_id=shared.settings.loga_formula_id)
 
 
 # ═══════════════════════════════════════════

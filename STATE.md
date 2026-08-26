@@ -36,7 +36,7 @@
 | 3 | ★ ต่อเส้นสแกน→แต้มทะลุทั้งสาย | ✅ เสร็จ (e2e ผ่าน) |
 | **4** | **OCR จริง (OpenCV + PaddleOCR)** | ✅ **เสร็จ — ยอดเงินแม่น 96%, ผิด 0%** |
 | **5** | merchant + template + Gemini + admin | 🟡 **รู้จักร้านได้แล้ว 96% (ผิด 0) · template/Gemini/admin ยังไม่เริ่ม** |
-| **6** | ทนล่ม (retry, circuit breaker, DLQ, Excel) | 🟡 **กันซ้ำ + retry + breaker + resend + Excel เสร็จ · DLQ ยังไม่ทำ** |
+| **6** | ทนล่ม (retry, circuit breaker, DLQ, Excel) | ✅ **เสร็จ** — กันซ้ำ + retry + breaker + resend + dead letter + Excel + ต่อ worker แล้ว |
 | 7 | เก็บงาน (metrics, retention, audit) | ⬜ ยังไม่เริ่ม |
 
 **ประมาณ 65-70% ของงานทั้งหมด** · 329 เทสผ่าน (1 skip)
@@ -282,8 +282,7 @@ alembic upgrade head
 | ใบเสร็จ #17 อ่านไม่ได้ | OCR อ่านเลขผิดตั้งแต่ต้นทาง (76 แทน 75) | ต้องใช้ template ของร้าน (Step 5) |
 | `SmsClient` ยัง `NotImplementedError` | ยังไม่เลือก vendor (user บอกรอก่อน ไม่อยากเสียเงิน) | ก่อนเปิดใช้จริง |
 | คอลัมน์ในไฟล์ Excel export เดาจากพารามิเตอร์ add_customer_point | ยังไม่เห็นหน้า Import จริงของ loga | เมื่อได้ credential — ปรับ `_HEADERS` ใน excel_export.py ให้ตรง |
-| resend ยังไม่มี "เลิกส่งหลัง N รอบ" (dead letter) | ใบที่ส่งไม่ได้จริงถูกลองเรื่อยๆ | ทำ dead_letter.py — ตอนนี้พึ่ง Excel export ให้คนกู้ด้วยมือ (ปลอดภัยพอ) |
-| `PointResender.run()` ยังไม่มีใครเรียกเป็นรอบ | ต้องมี worker/cron loop เรียก | ต่อ scheduler ตอนใกล้ deploy (โค้ด resend พร้อมแล้ว) |
+| ปลุกใบ DEAD กลับ (`dead_letter.revive`) ยังไม่มีหน้า admin เรียก | หน้า admin เป็นงานถัดไป | ทำพร้อม template admin |
 | ★ แต้มที่แจ้งลูกค้า (100 บาท = 1 แต้ม) เป็นค่าที่ **เราคำนวณเอง** | loga คิดแต้มจาก `formula_id` ฝั่งเขา และไม่คืนค่า "รายการนี้ได้กี่แต้ม" กลับมา | ต้องตั้งสูตรฝั่ง loga ให้เป็น 100:1 แล้วยิงจริงยืนยัน 1 ครั้ง — ไม่งั้นเลขที่แจ้งลูกค้าไม่ตรงกับแต้มจริง |
 | อ่านเลขอ้างอิงได้แค่ 7/14 เอกสาร | ป้ายกำกับบางใบ OCR อ่านเพี้ยนจนจับไม่ได้ | ดีขึ้นเองเมื่อมี template ต่อร้าน (Step 5) |
 
