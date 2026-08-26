@@ -22,6 +22,7 @@ from app.reliability.errors import (
     InputValidationError,
     RateLimitedError,
 )
+from app.admin import queue_admin_routes
 from app.routes import auth_routes, health_routes, job_routes, scan_routes
 from app.security.rate_limit import RateLimiter
 
@@ -45,6 +46,8 @@ async def lifespan(app: FastAPI):
     app.state.image_store = shared.images
     app.state.job_queue = shared.job_queue
     app.state.job_status = shared.job_status
+    app.state.admin_token = shared.settings.admin_token
+    app.state.formula_id = shared.settings.loga_formula_id
     app.state.scan_rate_limiter = RateLimiter(
         shared.redis, max_hits=SCAN_UPLOADS_PER_WINDOW, window_seconds=SCAN_WINDOW_SECONDS
     )
@@ -59,6 +62,7 @@ app.include_router(health_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(scan_routes.router)
 app.include_router(job_routes.router)
+app.include_router(queue_admin_routes.router)
 
 
 # ═══════════════════════════════════════════

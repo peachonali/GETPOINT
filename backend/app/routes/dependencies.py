@@ -44,3 +44,13 @@ def get_job_status(request: Request) -> JobStatusStore:
 
 def get_scan_rate_limiter(request: Request) -> RateLimiter:
     return request.app.state.scan_rate_limiter
+
+
+def get_formula_id(request: Request) -> str:
+    """formula_id ปัจจุบัน — Excel export ต้องใส่ในไฟล์เพื่อให้อัปโหลดกลับ loga ได้"""
+    return request.app.state.formula_id
+
+
+def get_admin_token(request: Request) -> str:
+    """โทเคนแอดมินที่ตั้งไว้ (ว่าง = ปิดหน้า admin) — แยกเป็น dependency ให้เทส override ได้"""
+    return request.app.state.admin_token

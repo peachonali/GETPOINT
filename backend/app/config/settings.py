@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # sms / gemini
     sms_api_key: str = ""
     gemini_api_key: str = ""
+    # โทเคนเข้าหน้า admin (ดูคิวค้าง/สั่งส่งซ้ำ/export) — ตั้งใน env เท่านั้น
+    # ว่าง = ปิดหน้า admin ทั้งหมด (ปลอดภัยโดยปริยาย — ไม่เผลอเปิดให้ใครเข้าโดยไม่ตั้งใจ)
+    admin_token: str = ""
 
     @field_validator("loga_base_url")
     @classmethod
