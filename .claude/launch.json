@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ocr-tool",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "app.tools.ocr_tool_api:app", "--port", "8100"],
+      "cwd": "backend",
+      "port": 8100
+    },
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
+      "port": 5173
+    }
+  ]
+}

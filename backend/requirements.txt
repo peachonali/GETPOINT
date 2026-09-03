@@ -1,0 +1,27 @@
+# ★ ปักหมุดเวอร์ชันของสาย OCR/ภาพโดยเจตนา
+#
+# เหตุผล: PaddleOCR เปลี่ยน API ระหว่างเวอร์ชันใหญ่ (2.x คืน list ซ้อน list, 3.x คืน dict)
+# ถ้าไม่ปักหมุด วันที่ deploy เครื่องใหม่ pip จะดึงตัวล่าสุด แล้วระบบอาจพังโดยที่โค้ดเราไม่ได้แก้อะไรเลย
+# — ซึ่งเป็นการพังแบบหาสาเหตุยากที่สุด (โค้ดเหมือนเดิมทุกบรรทัดแต่ผลต่าง)
+#
+# เวลาจะอัปเกรด: แก้เลขที่นี่ → รัน `python -m app.tools.try_ocr` กับ golden set →
+# เทียบความแม่นกับของเดิมก่อนตัดสินใจ (ไม่ใช่อัปแล้วหวังว่าจะดีขึ้น)
+
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+sqlalchemy
+alembic
+psycopg2-binary
+redis
+httpx
+python-multipart
+openpyxl
+
+# ── สาย OCR / ประมวลผลภาพ (ปักหมุด) ──
+paddleocr==3.3.0
+paddlepaddle==3.2.2
+opencv-python-headless==5.0.0.93
+pillow==12.2.0
+numpy==2.3.5

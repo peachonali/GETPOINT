@@ -1,0 +1,155 @@
+/* หน้าตาของ RegisterScreen + OtpInput — อ้างสีจาก tokens.css ทั้งหมด */
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body { margin: 0; }
+
+.screen {
+  min-height: 100%;
+  font-family: var(--v-font);
+  color: var(--v-ink);
+  background: radial-gradient(130% 90% at 15% 0%, var(--v-bg-1), var(--v-bg-2));
+  display: flex;
+  justify-content: center;
+  padding: 28px 18px calc(28px + env(safe-area-inset-bottom));
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── แบรนด์ ── */
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand__mark {
+  width: 40px; height: 40px; border-radius: 12px; flex: none;
+  display: grid; place-items: center;
+  font-weight: 800; font-size: 20px; color: var(--v-on-primary);
+  background: linear-gradient(135deg, var(--v-primary), var(--v-primary-strong));
+  box-shadow: var(--v-shadow-btn);
+}
+.brand__name { font-weight: 800; font-size: 19px; letter-spacing: -0.02em; color: var(--v-primary-strong); }
+.brand__tag { font-size: 12px; color: var(--v-accent-2); font-weight: 700; }
+
+/* ── หัวเรื่อง ── */
+.headline { font-size: 26px; line-height: 1.2; font-weight: 800; margin: 26px 0 6px; text-wrap: balance; }
+.subtle { font-size: 14px; line-height: 1.5; color: var(--v-muted); margin: 0; }
+
+/* ── ป้ายรางวัล ── */
+.reward {
+  display: flex; align-items: center; gap: 11px;
+  margin: 18px 0 22px; padding: 13px 15px;
+  border-radius: var(--v-radius-lg); font-weight: 600; font-size: 13.5px; line-height: 1.35;
+  background: linear-gradient(100deg, var(--v-accent-1), var(--v-accent-2));
+  color: var(--v-accent-ink);
+}
+.reward__emoji { font-size: 23px; }
+
+/* ── ฟอร์ม ── */
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field__label { font-size: 13px; font-weight: 600; color: var(--v-muted); }
+.input {
+  width: 100%; font-family: inherit; font-size: 16px; letter-spacing: 0.02em;
+  padding: 14px 15px; border-radius: var(--v-radius);
+  border: 1.5px solid var(--v-primary-border); background: var(--v-surface); color: var(--v-ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input::placeholder { color: #b9a6e0; }
+.input:focus-visible {
+  outline: none; border-color: var(--v-primary);
+  box-shadow: 0 0 0 4px var(--v-primary-soft);
+}
+
+/* ── ปุ่ม ── */
+.btn {
+  width: 100%; font-family: inherit; font-size: 16px; font-weight: 750;
+  padding: 15px; margin-top: 16px; border: none; border-radius: var(--v-radius);
+  color: var(--v-on-primary); background: var(--v-primary); cursor: pointer;
+  box-shadow: var(--v-shadow-btn); transition: transform 0.1s, background 0.15s, opacity 0.15s;
+}
+.btn:hover { background: var(--v-primary-strong); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.55; cursor: default; box-shadow: none; }
+.btn:focus-visible { outline: 3px solid var(--v-primary-soft); outline-offset: 2px; }
+
+.linkbtn {
+  background: none; border: none; font-family: inherit; font-size: 13.5px;
+  color: var(--v-primary-strong); font-weight: 650; cursor: pointer; padding: 8px;
+}
+.linkbtn:disabled { color: var(--v-muted); cursor: default; }
+
+.fine { font-size: 12px; line-height: 1.5; color: var(--v-muted); text-align: center; margin: 12px 2px 0; }
+.center { text-align: center; }
+.row { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+
+/* ── กล่อง error ── */
+.error {
+  margin-top: 14px; padding: 11px 14px; border-radius: var(--v-radius);
+  background: var(--v-danger-soft); color: var(--v-danger);
+  font-size: 13.5px; line-height: 1.45;
+}
+
+/* ── ช่อง OTP ── */
+.otp { display: flex; gap: 9px; justify-content: space-between; }
+.otp__box {
+  flex: 1; min-width: 0; aspect-ratio: 1 / 1.15; text-align: center;
+  font-family: inherit; font-size: 22px; font-weight: 700; color: var(--v-ink);
+  border: 1.5px solid var(--v-primary-border); border-radius: var(--v-radius);
+  background: var(--v-surface);
+}
+.otp__box:focus-visible {
+  outline: none; border-color: var(--v-primary); box-shadow: 0 0 0 4px var(--v-primary-soft);
+}
+
+/* ── หน้าสำเร็จ ── */
+.done { text-align: center; padding-top: 40px; }
+.done__badge {
+  width: 84px; height: 84px; margin: 0 auto 22px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 42px;
+  background: linear-gradient(135deg, var(--v-accent-1), var(--v-accent-2));
+  box-shadow: var(--v-shadow);
+}
+.done__title { font-size: 24px; font-weight: 800; margin: 0 0 8px; }
+
+/* ── ตัวหมุนโหลด ── */
+.spinner {
+  width: 20px; height: 20px; border-radius: 50%; display: inline-block;
+  border: 2.5px solid rgba(255, 255, 255, 0.4); border-top-color: #fff;
+  animation: v-spin 0.7s linear infinite; vertical-align: -4px;
+}
+.center-screen { min-height: 100%; display: grid; place-items: center; }
+.center-screen .spinner { border-color: var(--v-primary-soft); border-top-color: var(--v-primary); }
+@keyframes v-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }
+
+.grow { flex: 1; }
+.center-block { display: block; margin: 6px auto 0; }
+
+/* ── หน้าสแกน: ที่วางรูป ── */
+.dropzone {
+  width: 100%; margin-top: 22px; padding: 40px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  font-family: inherit; font-size: 14px; color: var(--v-muted); text-align: center;
+  background: var(--v-surface); cursor: pointer;
+  border: 2px dashed var(--v-primary-border); border-radius: var(--v-radius-lg);
+  transition: border-color 0.15s, background 0.15s;
+}
+.dropzone:hover { border-color: var(--v-primary); background: var(--v-primary-soft); }
+.dropzone:focus-visible { outline: 3px solid var(--v-primary-soft); outline-offset: 2px; }
+.dropzone__icon { font-size: 44px; }
+
+.preview {
+  width: 100%; margin-top: 22px; border-radius: var(--v-radius-lg);
+  /* ใบเสร็จเป็นแนวตั้งยาว — จำกัดความสูงไม่ให้ดันปุ่มตกจอ */
+  max-height: 46vh; object-fit: contain;
+  background: var(--v-surface); box-shadow: var(--v-shadow);
+}
+
+/* ── หน้าผลลัพธ์: ตัวเลขแต้ม ── */
+.balance {
+  margin: 18px 0 4px; font-size: 46px; font-weight: 800; line-height: 1;
+  color: var(--v-primary-strong); font-variant-numeric: tabular-nums;
+}
+.balance__unit { font-size: 18px; font-weight: 700; color: var(--v-muted); }

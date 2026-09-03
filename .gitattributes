@@ -1,0 +1,11 @@
+# บังคับ LF ทุกไฟล์ text — dev บน Windows แต่ deploy บน Linux (docker)
+# กัน CRLF หลุดเข้า repo ทำให้ shell script / docker พังบน container
+* text=auto eol=lf
+
+# ไฟล์ binary ห้ามแตะ line ending
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary

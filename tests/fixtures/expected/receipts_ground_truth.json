@@ -1,0 +1,392 @@
+{
+  "LINE_ALBUM_Receip_260819_1.jpg": {
+    "expected_total": 149.0,
+    "purchase_id": "kfc-149",
+    "document_id": "kfc-149-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "KFC",
+    "merchant_text": "CRG-KFC 12102 (KFC-BIG C NAKORNSAWAN)",
+    "date": "2026-06-06",
+    "time": "18:15",
+    "reference_codes": ["12102-002-0044557", "2330"],
+    "items": [
+      {"name": "BOX All Easy", "price": 149.0},
+      {"name": "[4] CrispyStrip", "price": null},
+      {"name": "[2] Nuggets", "price": null},
+      {"name": "Chicken Pop", "price": null},
+      {"name": "[R]French fries", "price": null},
+      {"name": "Pepsi [Refill]", "price": null}
+    ]
+  },
+  "LINE_ALBUM_Receip_260819_28.jpg": {
+    "expected_total": 149.0,
+    "purchase_id": "kfc-149",
+    "document_id": "kfc-149-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "KFC",
+    "merchant_text": "CRG-KFC 12102 (KFC-BIG C NAKORNSAWAN)",
+    "date": "2026-06-06",
+    "time": "18:15",
+    "reference_codes": ["12102-002-0044557", "2330"],
+    "items": [
+      {"name": "BOX All Easy", "price": 149.0},
+      {"name": "[4] CrispyStrip", "price": null},
+      {"name": "[2] Nuggets", "price": null},
+      {"name": "Chicken Pop", "price": null},
+      {"name": "[R]French fries", "price": null},
+      {"name": "Pepsi [Refill]", "price": null}
+    ]
+  },
+  "LINE_ALBUM_Receip_260819_9.jpg": {
+    "expected_total": 149.0,
+    "purchase_id": "kfc-149",
+    "document_id": "kfc-149-slip",
+    "doc_type": "card_slip",
+    "merchant_brand": "KFC",
+    "merchant_text": "KFC-12102 BIG C NAKORNSAWAN",
+    "date": "2026-06-06",
+    "time": "18:15:08",
+    "reference_codes": ["003646657141", "47853174225734071055"],
+    "items": []
+  },
+  "LINE_ALBUM_Receip_260819_21.jpg": {
+    "expected_total": 149.0,
+    "purchase_id": "kfc-149",
+    "document_id": "kfc-149-slip",
+    "doc_type": "card_slip",
+    "merchant_brand": "KFC",
+    "merchant_text": "KFC-12102 BIG C NAKORNSAWAN",
+    "date": "2026-06-06",
+    "time": "18:15:08",
+    "reference_codes": ["003646657141", "47853174225734071055"],
+    "items": []
+  },
+
+  "LINE_ALBUM_Receip_260819_3.jpg": {
+    "expected_total": 528.0,
+    "purchase_id": "kfc-528",
+    "document_id": "kfc-528-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "KFC",
+    "merchant_text": "CRG-KFC 12102 (KFC-BIG C NAKORNSAWAN)",
+    "date": "2026-06-06",
+    "time": "17:25",
+    "reference_codes": ["12102-002-0044526", "2299"],
+    "items": [
+      {"name": "New Suk Jai 7 COB", "price": 449.0},
+      {"name": "HS Piece (7 @0.00)", "price": null},
+      {"name": "[2] Wingz Zabb", "price": null},
+      {"name": "Chicken Pop", "price": null},
+      {"name": "[J]French fries", "price": 20.0},
+      {"name": "Kentucky Rice", "price": null},
+      {"name": "Pepsi [Refill]", "price": null},
+      {"name": "AddOn2CNR ChickN'Roll ALC", "price": 59.0}
+    ]
+  },
+  "LINE_ALBUM_Receip_260819_26.jpg": {
+    "expected_total": 528.0,
+    "purchase_id": "kfc-528",
+    "document_id": "kfc-528-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "KFC",
+    "merchant_text": "CRG-KFC 12102 (KFC-BIG C NAKORNSAWAN)",
+    "date": "2026-06-06",
+    "time": "17:25",
+    "reference_codes": ["12102-002-0044526", "2299"],
+    "items": [
+      {"name": "New Suk Jai 7 COB", "price": 449.0},
+      {"name": "HS Piece (7 @0.00)", "price": null},
+      {"name": "[2] Wingz Zabb", "price": null},
+      {"name": "Chicken Pop", "price": null},
+      {"name": "[J]French fries", "price": 20.0},
+      {"name": "Kentucky Rice", "price": null},
+      {"name": "Pepsi [Refill]", "price": null},
+      {"name": "AddOn2CNR ChickN'Roll ALC", "price": 59.0}
+    ]
+  },
+  "LINE_ALBUM_Receip_260819_5.jpg": {
+    "expected_total": 528.0,
+    "purchase_id": "kfc-528",
+    "document_id": "kfc-528-slip",
+    "doc_type": "card_slip",
+    "merchant_brand": "KFC",
+    "merchant_text": "KFC-12102 BIG C NAKORNSAWAN",
+    "date": "2026-06-06",
+    "time": "17:25:14",
+    "reference_codes": ["003646335301", "47853174225684071045"],
+    "items": []
+  },
+  "LINE_ALBUM_Receip_260819_24.jpg": {
+    "expected_total": 528.0,
+    "purchase_id": "kfc-528",
+    "document_id": "kfc-528-slip",
+    "doc_type": "card_slip",
+    "merchant_brand": "KFC",
+    "merchant_text": "KFC-12102 BIG C NAKORNSAWAN",
+    "date": "2026-06-06",
+    "time": "17:25:14",
+    "reference_codes": ["003646335301", "47853174225684071045"],
+    "items": []
+  },
+
+  "LINE_ALBUM_Receip_260819_2.jpg": {
+    "expected_total": 35.0,
+    "purchase_id": "kfc-35",
+    "document_id": "kfc-35-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "KFC",
+    "merchant_text": "CRG-KFC 12102 (KFC-BIG C NAKORNSAWAN)",
+    "date": "2026-06-06",
+    "time": "17:40",
+    "reference_codes": ["12102-006-0016990", "6142"],
+    "items": [{"name": "Kream Cup Choco SOFTSERVE", "price": 35.0}]
+  },
+  "LINE_ALBUM_Receip_260819_27.jpg": {
+    "expected_total": 35.0,
+    "purchase_id": "kfc-35",
+    "document_id": "kfc-35-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "KFC",
+    "merchant_text": "CRG-KFC 12102 (KFC-BIG C NAKORNSAWAN)",
+    "date": "2026-06-06",
+    "time": "17:40",
+    "reference_codes": ["12102-006-0016990", "6142"],
+    "items": [{"name": "Kream Cup Choco SOFTSERVE", "price": 35.0}]
+  },
+
+  "LINE_ALBUM_Receip_260819_4.jpg": {
+    "expected_total": 79.0,
+    "purchase_id": "dq-79-early",
+    "document_id": "dq-79-early-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "DQ",
+    "merchant_text": "MINOR DQ LIMITED / DQ_BIG C NAKHONSAWAN",
+    "date": "2026-06-06",
+    "time": "17:13",
+    "reference_codes": ["23191", "10231"],
+    "items": [
+      {"name": "CONE(L)", "price": 20.0},
+      {"name": "BZ OVL MINT CHIP BROWN S", "price": 59.0}
+    ]
+  },
+  "LINE_ALBUM_Receip_260819_25.jpg": {
+    "expected_total": 79.0,
+    "purchase_id": "dq-79-early",
+    "document_id": "dq-79-early-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "DQ",
+    "merchant_text": "MINOR DQ LIMITED / DQ_BIG C NAKHONSAWAN",
+    "date": "2026-06-06",
+    "time": "17:13",
+    "reference_codes": ["23191", "10231"],
+    "items": [
+      {"name": "CONE(L)", "price": 20.0},
+      {"name": "BZ OVL MINT CHIP BROWN S", "price": 59.0}
+    ]
+  },
+  "LINE_ALBUM_Receip_260819_6.jpg": {
+    "expected_total": 79.0,
+    "purchase_id": "dq-79-late",
+    "document_id": "dq-79-late-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "DQ",
+    "merchant_text": "MINOR DQ LIMITED / DQ_BIG C NAKHONSAWAN",
+    "date": "2026-06-06",
+    "time": "17:51",
+    "reference_codes": ["23222", "10262"],
+    "items": [{"name": "BG BZ FERRERO S", "price": 79.0}]
+  },
+  "LINE_ALBUM_Receip_260819_23.jpg": {
+    "expected_total": 79.0,
+    "purchase_id": "dq-79-late",
+    "document_id": "dq-79-late-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "DQ",
+    "merchant_text": "MINOR DQ LIMITED / DQ_BIG C NAKHONSAWAN",
+    "date": "2026-06-06",
+    "time": "17:51",
+    "reference_codes": ["23222", "10262"],
+    "items": [{"name": "BG BZ FERRERO S", "price": 79.0}]
+  },
+
+  "LINE_ALBUM_Receip_260819_13.jpg": {
+    "expected_total": 39.0,
+    "purchase_id": "dq-39",
+    "document_id": "dq-39-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "DQ",
+    "merchant_text": "MINOR DQ LIMITED / DQ_BIG C NAKHONSAWAN",
+    "date": "2026-06-06",
+    "time": "17:35",
+    "reference_codes": ["23203", "10243"],
+    "items": [{"name": "OREO SUNDAE", "price": 39.0}]
+  },
+  "LINE_ALBUM_Receip_260819_16.jpg": {
+    "expected_total": 39.0,
+    "purchase_id": "dq-39",
+    "document_id": "dq-39-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "DQ",
+    "merchant_text": "MINOR DQ LIMITED / DQ_BIG C NAKHONSAWAN",
+    "date": "2026-06-06",
+    "time": "17:35",
+    "reference_codes": ["23203", "10243"],
+    "items": [{"name": "OREO SUNDAE", "price": 39.0}]
+  },
+
+  "LINE_ALBUM_Receip_260819_10.jpg": {
+    "expected_total": 25.0,
+    "purchase_id": "vsquare-25",
+    "document_id": "vsquare-25-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "V-Square",
+    "merchant_text": "V-Square Department Store",
+    "date": "2026-06-06",
+    "time": "17:57",
+    "reference_codes": ["000201569747"],
+    "items": [{"name": "เค้กเปียโน @25", "price": 25.0}]
+  },
+  "LINE_ALBUM_Receip_260819_20.jpg": {
+    "expected_total": 25.0,
+    "purchase_id": "vsquare-25",
+    "document_id": "vsquare-25-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "V-Square",
+    "merchant_text": "V-Square Department Store",
+    "date": "2026-06-06",
+    "time": "17:57",
+    "reference_codes": ["000201569747"],
+    "items": [{"name": "เค้กเปียโน @25", "price": 25.0}]
+  },
+  "LINE_ALBUM_Receip_260819_15.jpg": {
+    "expected_total": 35.0,
+    "purchase_id": "vsquare-35",
+    "document_id": "vsquare-35-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "V-Square",
+    "merchant_text": "V-Square Department Store",
+    "date": "2026-06-06",
+    "time": "13:42",
+    "reference_codes": ["001001006891"],
+    "items": [{"name": "กระดาษการ์ดขาว A4 200G @35", "price": 35.0}]
+  },
+  "LINE_ALBUM_Receip_260819_8.jpg": {
+    "expected_total": 35.0,
+    "purchase_id": "vsquare-35",
+    "document_id": "vsquare-35-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "V-Square",
+    "merchant_text": "V-Square Department Store",
+    "date": "2026-06-06",
+    "time": "13:42",
+    "reference_codes": ["001001006891"],
+    "items": [{"name": "กระดาษการ์ดขาว A4 200G @35", "price": 35.0}]
+  },
+
+  "LINE_ALBUM_Receip_260819_11.jpg": {
+    "expected_total": 10.0,
+    "purchase_id": "bigc-foodpark-10",
+    "document_id": "bigc-foodpark-10-slip",
+    "doc_type": "foodcourt_slip",
+    "merchant_brand": "BIG C FOODPark",
+    "merchant_text": "FOODPark BIG C SUPERCENTER PUBLIC CO.,LTD NAKHONSAWAN BRANCH",
+    "date": "2026-06-06",
+    "time": "17:51:18",
+    "reference_codes": ["713201824"],
+    "items": [{"name": "Big-cup", "price": 10.0}]
+  },
+  "LINE_ALBUM_Receip_260819_19.jpg": {
+    "expected_total": 10.0,
+    "purchase_id": "bigc-foodpark-10",
+    "document_id": "bigc-foodpark-10-slip",
+    "doc_type": "foodcourt_slip",
+    "merchant_brand": "BIG C FOODPark",
+    "merchant_text": "FOODPark BIG C SUPERCENTER PUBLIC CO.,LTD NAKHONSAWAN BRANCH",
+    "date": "2026-06-06",
+    "time": "17:51:18",
+    "reference_codes": ["713201824"],
+    "items": [{"name": "Big-cup", "price": 10.0}]
+  },
+  "LINE_ALBUM_Receip_260819_14.jpg": {
+    "expected_total": 75.0,
+    "purchase_id": "bigc-foodpark-75",
+    "document_id": "bigc-foodpark-75-slip",
+    "doc_type": "foodcourt_slip",
+    "merchant_brand": "BIG C FOODPark",
+    "merchant_text": "FOODPark BIG C SUPERCENTER PUBLIC CO.,LTD NAKHONSAWAN BRANCH",
+    "date": "2026-06-06",
+    "time": "17:32:47",
+    "reference_codes": ["727030981"],
+    "items": [
+      {"name": "ข้าวขาหมู", "price": 55.0},
+      {"name": "ข้าวเปล่า", "price": 10.0},
+      {"name": "พิเศษเพิ่ม 10 บ", "price": 10.0}
+    ]
+  },
+  "LINE_ALBUM_Receip_260819_17.jpg": {
+    "expected_total": 75.0,
+    "purchase_id": "bigc-foodpark-75",
+    "document_id": "bigc-foodpark-75-slip",
+    "doc_type": "foodcourt_slip",
+    "merchant_brand": "BIG C FOODPark",
+    "merchant_text": "FOODPark BIG C SUPERCENTER PUBLIC CO.,LTD NAKHONSAWAN BRANCH",
+    "date": "2026-06-06",
+    "time": "17:32:47",
+    "reference_codes": ["727030981"],
+    "items": [
+      {"name": "ข้าวขาหมู", "price": 55.0},
+      {"name": "ข้าวเปล่า", "price": 10.0},
+      {"name": "พิเศษเพิ่ม 10 บ", "price": 10.0}
+    ]
+  },
+
+  "LINE_ALBUM_Receip_260819_7.jpg": {
+    "expected_total": 1240.0,
+    "purchase_id": "sizzler-1240",
+    "document_id": "sizzler-1240-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "Sizzler",
+    "merchant_text": "MF Cafe & Restaurant Co., Ltd. Sizzler - V-Square Nakhonsawan",
+    "date": "2026-06-06",
+    "time": "17:45",
+    "reference_codes": [],
+    "items": []
+  },
+  "LINE_ALBUM_Receip_260819_22.jpg": {
+    "expected_total": 1240.0,
+    "purchase_id": "sizzler-1240",
+    "document_id": "sizzler-1240-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "Sizzler",
+    "merchant_text": "MF Cafe & Restaurant Co., Ltd. Sizzler - V-Square Nakhonsawan",
+    "date": "2026-06-06",
+    "time": "17:45",
+    "reference_codes": [],
+    "items": []
+  },
+
+  "LINE_ALBUM_Receip_260819_12.jpg": {
+    "expected_total": 2696.0,
+    "purchase_id": "pizza-2696",
+    "document_id": "pizza-2696-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "The Pizza Company",
+    "merchant_text": "NP Progress Co.,Ltd. PIZZA BIGC NAKORNSAWAN",
+    "date": "2026-06-06",
+    "time": null,
+    "reference_codes": [],
+    "items": []
+  },
+  "LINE_ALBUM_Receip_260819_18.jpg": {
+    "expected_total": 2696.0,
+    "purchase_id": "pizza-2696",
+    "document_id": "pizza-2696-receipt",
+    "doc_type": "receipt",
+    "merchant_brand": "The Pizza Company",
+    "merchant_text": "NP Progress Co.,Ltd. PIZZA BIGC NAKORNSAWAN",
+    "date": "2026-06-06",
+    "time": null,
+    "reference_codes": [],
+    "items": []
+  }
+}

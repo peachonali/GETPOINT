@@ -1,0 +1,28 @@
+# secret — ห้าม commit เด็ดขาด (.env.example commit ได้ เพราะเป็น placeholder ว่าง)
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# node / frontend
+node_modules/
+dist/
+
+# ข้อมูลรันไทม์
+storage_data/
+
+# แคชผล OCR ของเครื่องมือวัด — ผูกกับเวลาแก้ไขไฟล์รูปในเครื่องนั้น
+# commit ไปก็ใช้ไม่ได้บนเครื่องอื่น (แคชจะหมดอายุทันที) และทำ diff รก
+tests/fixtures/expected/.ocr_cache.json
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

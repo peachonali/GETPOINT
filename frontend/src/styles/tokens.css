@@ -1,0 +1,43 @@
+/* ═══════════════════════════════════════════════════════════
+   Design Tokens — "แบบ 4: รางวัลสนุก" (ม่วง + เหลืองอำพัน)
+
+   ★ อยากเปลี่ยนดีไซน์ทั้งหน้า แก้แค่ไฟล์นี้ไฟล์เดียว
+     RegisterScreen/OtpInput ไม่ได้ hardcode สีไว้เลย อ้างผ่านตัวแปรพวกนี้หมด
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  /* พื้นหลัง + พื้นผิว */
+  --v-bg-1: #f3ecff;
+  --v-bg-2: #e9deff;
+  --v-surface: #ffffff;
+
+  /* ตัวอักษร */
+  --v-ink: #2a1e48;
+  --v-muted: #6b5e8f;
+  --v-on-primary: #ffffff;
+
+  /* สีหลัก (ปุ่ม/แบรนด์) */
+  --v-primary: #7c3aed;
+  --v-primary-strong: #6d28d9;
+  --v-primary-soft: #efe7fe;
+  --v-primary-border: #d9c8f5;
+
+  /* สีเน้น (รางวัล) */
+  --v-accent-1: #fbbf24;
+  --v-accent-2: #f59e0b;
+  --v-accent-ink: #5a3a00;
+
+  /* สถานะ */
+  --v-danger: #dc2626;
+  --v-danger-soft: #fdecec;
+  --v-ok: #16a34a;
+
+  /* รูปทรง + เงา */
+  --v-radius: 14px;
+  --v-radius-lg: 20px;
+  --v-radius-pill: 999px;
+  --v-shadow: 0 18px 40px -20px rgba(76, 29, 149, 0.45);
+  --v-shadow-btn: 0 12px 22px -10px rgba(124, 58, 237, 0.7);
+
+  /* ตัวอักษร */
+  --v-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, "Noto Sans Thai", sans-serif;
+}

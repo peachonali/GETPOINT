@@ -1,0 +1,7 @@
+# ของที่ใช้ตอน dev/เทสเท่านั้น — ไม่ต้องติดตั้งบนเครื่องจริง
+# ติดตั้ง: pip install -r requirements.txt -r requirements-dev.txt
+-r requirements.txt
+
+pytest
+fakeredis   # Redis in-memory สำหรับเทส OTP/rate_limit (behavior ตรง Redis จริง)
+# mock HTTP ใช้ httpx.MockTransport ที่ติดมากับ httpx อยู่แล้ว — ไม่ต้องลงเพิ่ม
