@@ -6,6 +6,9 @@
     2. จำกัดขนาด — กันคนอัปไฟล์ใหญ่ถล่มดิสก์/แรม
     3. ★ ลบ EXIF — รูปถ่ายมือถือฝัง "พิกัด GPS + รุ่นเครื่อง + เวลา" มาด้วย
        เก็บไว้ = เก็บข้อมูลส่วนบุคคลเกินจำเป็น (PDPA) จึงล้างทิ้งตั้งแต่ประตู
+       ★★ แต่ต้อง "หมุนภาพตามแท็ก orientation ก่อน" แล้วค่อยลบ — ไม่งั้นรูปมือถือที่ถือ
+          แนวตั้งถ่าย (เก็บพิกเซลตะแคง + แท็กบอกให้หมุน) จะกลายเป็นภาพตะแคง/กลับหัว
+          เมื่อลบแท็กทิ้งเฉยๆ → OCR อ่านตัวอักษรที่ตะแคงไม่ออก = "อ่านไม่ได้"
 
 คืนรูปที่ "ล้างแล้ว" ออกไป — ชั้นอื่นจะได้ใช้ของที่ปลอดภัยเสมอ ไม่ใช่ของดิบจากลูกค้า
 """
@@ -13,7 +16,7 @@ from __future__ import annotations
 
 import io
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 from app.reliability.errors import InputValidationError
 
@@ -33,6 +36,15 @@ MIN_HEIGHT = 200
 
 #: กัน "decompression bomb" — ไฟล์เล็กแต่คลายออกมหาศาลจนกินแรมหมดเครื่อง
 MAX_PIXELS = 50_000_000
+
+#: คุณภาพ JPEG ตอนเขียนใหม่เพื่อลบ metadata — สูงโดยตั้งใจ (ใกล้ไม่สูญเสีย)
+#:
+#: ★ ทำไม 95 ไม่ใช่ 90: ด่านนี้ไม่ใช่ปลายทาง — ภาพจะถูก image_prep บีบเป็น JPEG อีกที
+#:   ก่อนเข้า OCR อยู่แล้ว การบีบซ้ำสองรอบ (q90 ที่นี่ + q95 ที่ image_prep) กัด
+#:   รายละเอียดตัวเลขเล็กๆ ทิ้งตั้งแต่ยังไม่ถึง OCR → อ่านยอดผิด (วัดจริง: ใบ #12/#24
+#:   ยอด 2,696/528 กลายเป็น 1/18 ที่ q90 · พอเป็น q95 อ่านถูกทั้งคู่)
+#:   ตั้งให้เท่า image_prep เพื่อไม่ให้ด่านความปลอดภัยเป็นตัวทำให้อ่านแย่ลง
+_CLEAN_JPEG_QUALITY = 95
 
 
 def detect_image_format(data: bytes) -> str | None:
@@ -71,7 +83,12 @@ def _decode_verify_and_strip_exif(data: bytes) -> bytes:
     try:
         with Image.open(io.BytesIO(data)) as image:
             image.load()  # บังคับ decode จริง — ไฟล์เสียจะพังตรงนี้
-            width, height = image.size
+
+            # ★ หมุนภาพตามแท็ก EXIF orientation ก่อนอื่นเลย — คืนภาพที่ "ตั้งตรงจริง"
+            #   (no-op ถ้าไม่มีแท็ก/แท็ก=1 จึงไม่กระทบรูปที่ตั้งตรงอยู่แล้ว)
+            #   ทำก่อนเช็กขนาด เพราะกว้าง×สูงสลับกันได้เมื่อหมุน 90°
+            oriented = ImageOps.exif_transpose(image)
+            width, height = oriented.size
 
             if width * height > MAX_PIXELS:
                 raise InputValidationError("รูปมีขนาดใหญ่เกินไป กรุณาถ่ายใหม่")
@@ -81,7 +98,7 @@ def _decode_verify_and_strip_exif(data: bytes) -> bytes:
 
             # แปลงเป็น RGB: ตัด alpha/palette ที่ JPEG ไม่รองรับ และทำให้ pipeline ถัดไป
             # เจอรูปแบบเดียวเสมอ (OpenCV/OCR ไม่ต้องเดา)
-            cleaned = image.convert("RGB")
+            cleaned = oriented.convert("RGB")
 
     except InputValidationError:
         raise
@@ -91,5 +108,5 @@ def _decode_verify_and_strip_exif(data: bytes) -> bytes:
 
     # เขียนใหม่จากพิกเซลล้วน → EXIF/GPS/comment หายหมดโดยธรรมชาติ
     output = io.BytesIO()
-    cleaned.save(output, format="JPEG", quality=90)
+    cleaned.save(output, format="JPEG", quality=_CLEAN_JPEG_QUALITY)
     return output.getvalue()

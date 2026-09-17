@@ -124,3 +124,54 @@ def test_cleaned_image_is_still_readable():
 def test_png_is_converted_to_jpeg():
     """แปลงเป็นรูปแบบเดียวตั้งแต่ประตู — ชั้นถัดไป (OpenCV/OCR) ไม่ต้องเดารูปแบบ"""
     assert detect_image_format(check_and_clean_image(_image_bytes("PNG"))) == "JPEG"
+
+
+# ═══════════════════════════════════════════
+# ★ EXIF orientation — ต้นเหตุ "รูปมือถืออ่านไม่ได้"
+# ═══════════════════════════════════════════
+
+_TAG_ORIENTATION = 0x0112
+
+
+def _phone_portrait_photo() -> bytes:
+    """จำลอง "รูปที่มือถือถือแนวตั้งถ่าย" เป๊ะแบบที่เครื่องเก็บจริง:
+
+    ภาพตั้งตรง = แถบแดงอยู่ "บนสุด" · แต่เซ็นเซอร์เก็บพิกเซลตะแคง (หมุน 90° CCW)
+    แล้วฝากแท็ก orientation=6 ไว้บอก viewer ว่า "หมุนตามเข็ม 90° ก่อนแสดง"
+    → ถ้าลบแท็กทิ้งเฉยๆ โดยไม่หมุน ภาพจะตะแคง (แถบแดงไปอยู่ด้านข้าง)
+    """
+    upright = Image.new("RGB", (800, 1200), color=(245, 245, 245))
+    for y in range(400):  # แถบแดงครอบ 1 ใน 3 ส่วนบน = จุดสังเกตทิศทาง
+        for x in range(800):
+            upright.putpixel((x, y), (220, 30, 30))
+
+    sideways = upright.transpose(Image.ROTATE_90)  # เก็บพิกเซลตะแคง (CCW)
+    exif = sideways.getexif()
+    exif[_TAG_ORIENTATION] = 6
+    buffer = io.BytesIO()
+    sideways.save(buffer, format="JPEG", exif=exif)
+    return buffer.getvalue()
+
+
+def test_applies_exif_orientation_so_photo_is_upright():
+    """★ รูปมือถือแนวตั้ง (พิกเซลตะแคง + แท็ก orientation=6) ต้องถูกหมุนให้ตั้งตรง
+    ก่อนลบ EXIF — ไม่งั้น OCR เจอตัวอักษรตะแคงแล้วอ่านไม่ออก (บั๊กที่ทำให้ "อ่านไม่ได้")
+
+    ยืนยัน "ทิศถูก" ด้วยตำแหน่งแถบแดง ไม่ใช่แค่ขนาด — กันการหมุนผิดทางแล้วผ่านเทส
+    """
+    cleaned = check_and_clean_image(_phone_portrait_photo())
+
+    with Image.open(io.BytesIO(cleaned)) as image:
+        assert image.size == (800, 1200), "ต้องกลับมาเป็นแนวตั้ง (กว้าง<สูง)"
+        top_red = image.getpixel((400, 60))
+        bottom_gray = image.getpixel((400, 1140))
+
+    assert top_red[0] > 150 and top_red[1] < 120, f"แถบแดงต้องอยู่บนสุด ได้ {top_red}"
+    assert bottom_gray[0] > 150 and bottom_gray[1] > 150, f"ด้านล่างต้องเป็นพื้นเทา ได้ {bottom_gray}"
+
+
+def test_upright_image_not_rotated():
+    """รูปที่ตั้งตรงอยู่แล้ว (ไม่มีแท็ก orientation) ต้องไม่ถูกหมุน — กันแก้เกินจนพังของที่ดีอยู่"""
+    cleaned = check_and_clean_image(_image_bytes(size=(800, 1200)))
+    with Image.open(io.BytesIO(cleaned)) as image:
+        assert image.size == (800, 1200)

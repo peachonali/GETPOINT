@@ -14,7 +14,6 @@ from typing import Any
 
 from app.image_prep.image_pipeline import prepare_for_ocr
 from app.receipt_data.field_extractor import extract_receipt_fields
-from app.receipt_data.line_items import find_line_items
 from app.reliability.errors import GetpointError
 
 #: OCR ตัวเดียวของทั้งเครื่องมือ + lock กันโหลดซ้อนตอนหลายคำขอมาพร้อมกัน
