@@ -28,9 +28,13 @@ if (-not $cf) {
 
 Write-Host "▶ เปิดเซิร์ฟเวอร์ OCR (หน้าต่างใหม่)..." -ForegroundColor Cyan
 # เปิด uvicorn ในหน้าต่างใหม่ เพื่อให้ tunnel รันในหน้าต่างนี้เห็นลิงก์ชัด
+#
+# ★ ห่อด้วย while ($true) ให้ "รีสตาร์ทเองถ้าดับ" — PaddleOCR เคย segfault (exit 139)
+#   กับรูปมือถือความละเอียดสูงบางใบ (ย่อขนาดช่วยลดโอกาสมากแล้ว แต่กันเหนียวไว้)
+#   ถ้าเซิร์ฟเวอร์ดับกลางทาง ลิงก์จะกลับมาใช้ได้เองใน ~25 วิ ไม่ต้องมานั่งเปิดใหม่
 Start-Process powershell -ArgumentList @(
     "-NoExit", "-Command",
-    "cd '$backend'; python -m uvicorn app.tools.ocr_tool_api:app --host 0.0.0.0 --port 8100"
+    "cd '$backend'; while (`$true) { python -m uvicorn app.tools.ocr_tool_api:app --host 0.0.0.0 --port 8100; Write-Host 'เซิร์ฟเวอร์ดับ — กำลังรีสตาร์ทใน 3 วิ...' -ForegroundColor Yellow; Start-Sleep 3 }"
 )
 
 Write-Host "⏳ รออุ่นโมเดล OCR ~25 วินาที..." -ForegroundColor Cyan
