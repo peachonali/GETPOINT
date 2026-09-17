@@ -34,6 +34,25 @@ def _get_ocr():
     return _ocr
 
 
+def warm_up() -> None:
+    """โหลดโมเดลจริงไว้ล่วงหน้า — เรียกตอนบูต server จะได้ไม่ให้ลูกค้าคนแรกรอโหลด
+
+    ★ ต้อง "อ่านรูปจริง 1 ครั้ง" ไม่ใช่แค่สร้าง PaddleOcr()
+      เพราะ PaddleOcr โหลดโมเดลแบบ lazy ตอน .read() ครั้งแรก ไม่ใช่ตอนสร้าง object
+      (เคยพลาด: อุ่นแค่สร้าง object → เสร็จใน 2ms → ลูกค้าคนแรกยังรอโหลด 20 วิอยู่ดี)
+    """
+    import cv2
+    import numpy as np
+
+    # รูปขาวจิ๋ว 32x32 — เล็กสุดที่ยังผ่าน pipeline ได้ แค่ให้โมเดลถูกโหลดเข้าแรม
+    blank = np.full((32, 32, 3), 255, np.uint8)
+    jpeg = cv2.imencode(".jpg", blank)[1].tobytes()
+    try:
+        _get_ocr().read(jpeg)
+    except Exception:  # noqa: BLE001 — อ่านรูปเปล่าไม่เจอตัวอักษรเป็นเรื่องปกติ ขอแค่โมเดลโหลด
+        pass
+
+
 def extract_one(filename: str, image: bytes) -> dict[str, Any]:
     """อ่านใบเสร็จ 1 ใบ → dict ที่พร้อมเอาไปแสดง/ลง Excel
 

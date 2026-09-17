@@ -1,0 +1,15 @@
+# ไม่ส่งของหนัก/ไม่จำเป็นเข้า build context (build เร็วขึ้น + image เล็กลง)
+.git
+frontend
+tests
+docs
+storage_data
+**/__pycache__
+**/*.pyc
+.pytest_cache
+tests/fixtures
+backend/.ocr_cache.json
+tests/fixtures/expected/.ocr_cache.json
+.env
+.env.*
+!.env.example

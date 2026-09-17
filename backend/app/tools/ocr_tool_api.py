@@ -16,21 +16,45 @@
 """
 from __future__ import annotations
 
+import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, Response
 
 from app.observability.logging import get_logger, setup_logging
 from app.security.upload_check import check_and_clean_image
 from app.tools.ocr_excel import build_excel
-from app.tools.ocr_extract import extract_one
+from app.tools.ocr_extract import extract_one, warm_up
 
 setup_logging()
 log = get_logger(__name__)
 
-app = FastAPI(title="GETPOINT OCR Tool")
-
 #: กันอัปโหลดทีเดียวเยอะเกินจนเครื่องแฮงค์ (OCR กิน CPU ~8 วิ/ใบ)
 _MAX_FILES_PER_BATCH = 30
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """อุ่นโมเดล OCR ตอนบูต — ★ สำคัญตอน deploy จริง
+
+    ถ้าไม่อุ่นไว้ ลูกค้าคนแรกที่สแกนจะรอ ~20 วิ (โหลดโมเดล) แล้วนึกว่าเว็บค้าง
+    อุ่นตอนบูตทำให้ทุกคำขอเร็วตั้งแต่ใบแรก · ปิดได้ด้วย OCR_WARMUP=0 (เช่นตอนเทส)
+    """
+    if os.getenv("OCR_WARMUP", "1") != "0":
+        log.info("กำลังอุ่นโมเดล OCR...")
+        warm_up()
+        log.info("อุ่นโมเดล OCR เสร็จ พร้อมรับงาน")
+    yield
+
+
+app = FastAPI(title="GETPOINT OCR Tool", lifespan=lifespan)
+
+
+@app.get("/health")
+def health() -> dict:
+    """ให้ platform/tunnel เช็คว่าเว็บยังมีชีวิต (ไม่โหลดโมเดล ตอบเร็ว)"""
+    return {"status": "ok"}
 
 
 @app.post("/api/extract")

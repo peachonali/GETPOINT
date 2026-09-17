@@ -1,0 +1,38 @@
+# ── Dockerfile ของ "เครื่องมืออ่านใบเสร็จ → Excel" (app/tools/ocr_tool_api.py) ──
+#
+# สร้าง image ที่มีทุกอย่างพร้อมรัน: Python + PaddleOCR + โมเดลฝังในตัว
+# โมเดลถูกดาวน์โหลดตอน build (มีเน็ต) แล้วฝังลง image → ตอนรันไม่ต้องต่อเน็ตอีก
+# (ระบบตั้ง DISABLE_MODEL_SOURCE_CHECK=True ตอนรัน จึงต้องมีโมเดลอยู่แล้ว)
+#
+# build:  docker build -f backend/Dockerfile.ocrtool -t getpoint-ocr .
+# run:    docker run -p 8100:8100 getpoint-ocr
+
+FROM python:3.11-slim
+
+# ★ ของที่ opencv/paddle ต้องใช้บน slim (ไม่มีมาให้) — ไม่ใส่จะ import พังตอนรัน
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libgl1 libglib2.0-0 libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# ติดตั้ง dependency ก่อน copy โค้ด — layer นี้ถูก cache ตราบใดที่ requirements ไม่เปลี่ยน
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY backend/ /app/
+
+# ★ ดาวน์โหลดเฉพาะ 2 โมเดลที่โค้ดใช้จริง (det + th rec) แล้วฝังลง image
+#   ตั้งค่าตรงกับ paddle_ocr.py (ปิด doc orientation/unwarp/textline) จึงไม่โหลดตัวที่ไม่ใช้
+#   ทำตอน build โดยเปิดให้โหลดเน็ตได้ (ตรงข้ามกับตอนรันที่ปิด)
+RUN DISABLE_MODEL_SOURCE_CHECK=False python -c "\
+from paddleocr import PaddleOCR; \
+PaddleOCR(lang='th', use_doc_orientation_classify=False, \
+use_doc_unwarping=False, use_textline_orientation=False)"
+
+# ให้ platform กำหนดพอร์ตผ่าน env ได้ (Fly/Render/Railway ส่ง $PORT มา) · ไม่มีก็ 8100
+ENV PORT=8100
+EXPOSE 8100
+
+# shell form เพื่อให้ $PORT ถูกแทนค่า · bind 0.0.0.0 ให้เข้าจากนอก container ได้
+CMD uvicorn app.tools.ocr_tool_api:app --host 0.0.0.0 --port ${PORT}

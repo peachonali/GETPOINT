@@ -69,7 +69,14 @@ def client(monkeypatch):
                 "raw_text": "KFC 149"}
 
     monkeypatch.setattr(ocr_tool_api, "extract_one", fake_extract)
+    monkeypatch.setenv("OCR_WARMUP", "0")  # ห้ามโหลดโมเดลจริงตอนเทส
     return TestClient(ocr_tool_api.app)
+
+
+def test_health(client):
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
 
 
 def test_home_page_loads(client):

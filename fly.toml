@@ -1,0 +1,40 @@
+# Fly.io config — deploy "เครื่องมืออ่านใบเสร็จ" ขึ้น server จริง 24/7
+#
+# ★ ต้องแก้ app = "..." ให้เป็นชื่อที่ไม่ซ้ำใครก่อน deploy (ดู DEPLOY.md)
+#
+# deploy:  fly deploy   (รันจาก repo root — Fly จะ build จาก backend/Dockerfile.ocrtool)
+
+app = "getpoint-ocr-CHANGE-ME"
+primary_region = "sin"   # สิงคโปร์ — ใกล้ไทยสุด (latency ต่ำ)
+
+[build]
+  dockerfile = "backend/Dockerfile.ocrtool"
+
+[env]
+  PORT = "8100"
+  # อุ่นโมเดลตอนบูต — ลูกค้าคนแรกไม่ต้องรอโหลด (ดู ocr_tool_api lifespan)
+  OCR_WARMUP = "1"
+
+[http_service]
+  internal_port = 8100
+  force_https = true          # บังคับ HTTPS — LINE rich menu ต้องเป็น https
+  auto_stop_machines = "stop" # ไม่มีคนใช้ → หยุดเครื่อง (ประหยัดเงิน)
+  auto_start_machines = true  # มีคนเข้า → เปิดเครื่องเอง
+  min_machines_running = 0
+
+  [http_service.http_options]
+    # OCR ~8 วิ/ใบ · ถ้าอัปหลายใบพร้อมกันอาจนานกว่านั้น — ยืดเวลารอตอบ
+    idle_timeout = 120
+
+  [[http_service.checks]]
+    method = "get"
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "60s"       # เผื่อเวลาอุ่นโมเดลตอนบูต
+
+[[vm]]
+  # ★ PaddleOCR กิน RAM ~1-2GB — น้อยกว่านี้เครื่องจะถูก kill ตอนอ่านใบเสร็จ
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 2
