@@ -26,3 +26,6 @@ tests/fixtures/expected/.ocr_cache.json
 .idea/
 .DS_Store
 Thumbs.db
+
+# tunnel binary (โหลดเอง ไม่ commit — ใหญ่ 55MB)
+cloudflared.exe
