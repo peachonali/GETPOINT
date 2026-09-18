@@ -1,4 +1,4 @@
-# เปิดเครื่องมืออ่านใบเสร็จ + เปิด public link (Cloudflare Tunnel) ในคำสั่งเดียว
+﻿# เปิดเครื่องมืออ่านใบเสร็จ + เปิด public link (Cloudflare Tunnel) ในคำสั่งเดียว
 #
 # ใช้ยังไง (ดับเบิลคลิกไม่ได้ ต้องเปิด PowerShell แล้วรัน):
 #     cd C:\Users\ASUS\Desktop\getpoint
